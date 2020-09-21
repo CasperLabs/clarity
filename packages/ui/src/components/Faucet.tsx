@@ -40,7 +40,6 @@ class Faucet extends RefreshableComponent<Props, {}> {
           requests={faucet.faucetRequests}
           onRefresh={() => faucet.refreshFaucetRequestStatus()}
         />
-        <CliHint requests={faucet.faucetRequests} />
       </div>
     );
   }
@@ -94,8 +93,7 @@ const FaucetForm = observer(
     );
   }
 );
-
-const CliHint = observer((props: { requests: FaucetRequest[] }) =>
+observer((props: { requests: FaucetRequest[] }) =>
   props.requests.length > 0 ? (
     <CommandLineHint>
       <p>
