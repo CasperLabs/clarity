@@ -48,10 +48,11 @@ export class StoredFaucetService {
     let justDeployed = false;
     // if the current Clarity instance haven't deploy stored version faucet,
     if (!this.storedFaucetFinalized && !this.deployHash) {
-      // check whether Clarity has deployed in the blockchain before,
+      // check whether stored version faucet contract has been deployed on the blockchain
+      // It could happen when SRE restart Clarity instance.
       const state = await this.checkState();
       if (state) {
-        // this could happen when Clarity get restarted, we shouldn't deploy new stored version faucet.
+        // we shouldn't deploy new stored version faucet.
         this.storedFaucetFinalized = true;
       } else {
         await this.deployStoredVersionFaucet();
@@ -93,7 +94,7 @@ export class StoredFaucetService {
           dependencies.push(deployHash);
         }
       } else {
-        // if we just deployed the contract, set dependencies directly
+        // we just deployed the contract, set dependencies directly
         dependencies.push(this.deployHash);
       }
     }
