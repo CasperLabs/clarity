@@ -16,6 +16,7 @@ interface FieldProps<T> {
 interface Option {
   label: string;
   value: string;
+  disabled?: boolean;
 }
 
 interface TextProps extends FieldProps<string> {
@@ -171,7 +172,7 @@ export const SelectField = observer((props: SelectProps) => (
         </option>
       )}
       {props.options.map(opt => (
-        <option key={opt.value} value={opt.value}>
+        <option key={opt.value} value={opt.value} disabled={opt.disabled}>
           {opt.label}
         </option>
       ))}
@@ -272,7 +273,7 @@ export const TextArea = (props: {
       className="form-control"
       id="exampleFormControlTextarea1"
       disabled={props.disabled}
-      style={{fontSize: "12px"}}
+      style={{ fontSize: '12px' }}
     >
       {props.children}
     </textarea>

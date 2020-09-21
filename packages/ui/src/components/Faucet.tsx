@@ -2,7 +2,8 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import { Form, SelectField, TextField } from './Forms';
 import AuthContainer, {
-  getPublicKeyHashBase16
+  getPublicKeyHashBase16,
+  getPublicKeyHashBase64
 } from '../containers/AuthContainer';
 import { FaucetContainer, FaucetRequest } from '../containers/FaucetContainer';
 import {
@@ -29,6 +30,7 @@ class Faucet extends RefreshableComponent<Props, {}> {
       this.props.auth.refreshAccounts(),
       this.props.faucet.refreshFaucetRequestStatus()
     ]);
+    await this.props.auth.refreshBalances();
   }
 
   render() {
@@ -67,10 +69,14 @@ const FaucetForm = observer(
             label="Account"
             placeholder="Select account"
             value={(auth.selectedAccount && auth.selectedAccount.name) || null}
-            options={(auth.accounts || []).map(x => ({
-              label: x.name,
-              value: x.name
-            }))}
+            options={(auth.accounts || []).map(x => {
+              return {
+                label: x.name,
+                value: x.name,
+                disabled: !!auth.balances.get(getPublicKeyHashBase64(x)).value
+                  ?.balance
+              };
+            })}
             onChange={x => auth.selectAccountByName(x)}
           />
           <TextField
