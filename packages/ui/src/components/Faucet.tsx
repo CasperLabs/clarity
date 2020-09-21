@@ -24,9 +24,11 @@ interface Props {
 
 @observer
 class Faucet extends RefreshableComponent<Props, {}> {
-  refresh() {
-    this.props.auth.refreshAccounts();
-    this.props.faucet.refreshFaucetRequestStatus();
+  async refresh() {
+    await Promise.all([
+      this.props.auth.refreshAccounts(),
+      this.props.faucet.refreshFaucetRequestStatus()
+    ]);
   }
 
   render() {
@@ -119,7 +121,7 @@ const CliHint = observer((props: { requests: FaucetRequest[] }) =>
 const StatusTable = observer(
   (props: {
     requests: FaucetRequest[];
-    onRefresh: () => void;
+    onRefresh: () => Promise<void>;
     lastRefresh?: Date;
   }) => (
     <DataTable

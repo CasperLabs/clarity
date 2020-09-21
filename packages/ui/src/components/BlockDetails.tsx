@@ -104,7 +104,7 @@ const BlockTable = observer(
   (props: {
     blockHashBase16: string;
     block: BlockInfo | null;
-    refresh: () => void;
+    refresh: () => Promise<void>;
   }) => {
     const attrs = props.block && blockAttrs(props.block);
     return (

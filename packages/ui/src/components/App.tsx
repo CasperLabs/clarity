@@ -296,8 +296,10 @@ class _Navigation extends RefreshableComponent<
   // refresh every 10 seconds
   refreshIntervalMillis = 10000;
   async refresh() {
-    this.props.connectedPeersContainer.refreshPeers();
-    this.props.networkInfoContainer.refresh();
+    await Promise.all([
+      this.props.connectedPeersContainer.refreshPeers(),
+      this.props.networkInfoContainer.refresh()
+    ]);
   }
   render() {
     return (

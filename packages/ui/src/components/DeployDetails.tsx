@@ -98,7 +98,7 @@ const ResultsTable = observer(
     deployHashBase16: string;
     deploy: DeployInfo | null;
     balances: ObservableValueMap<string, number>;
-    refresh: () => void;
+    refresh: () => Promise<void>;
   }) => {
     return (
       <DataTable

@@ -18,7 +18,7 @@ const OrphanedLineColor = '#FF0000';
 
 export interface Props {
   title: string;
-  refresh?: () => void;
+  refresh?: () => Promise<void>;
   subscribeToggleStore?: ToggleStore;
   hideBallotsToggleStore?: ToggleStore;
   hideBlockHashToggleStore?: ToggleStore;

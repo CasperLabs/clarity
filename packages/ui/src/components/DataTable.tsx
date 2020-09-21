@@ -6,7 +6,7 @@ import { observer } from 'mobx-react';
 
 export interface Props<T> {
   title: string;
-  refresh?: () => void;
+  refresh?: () => Promise<void>;
   subscribeToggleStore?: ToggleStore;
   filterToggleStore?: ToggleStore;
   filterRow?: (x: T, idx: number) => Boolean;
@@ -28,8 +28,11 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
         <div className="card-header">
           <span>{this.props.title}</span>
           {this.props.refresh && (
-            <div className="float-right">
-              <RefreshButton refresh={() => this.props.refresh!()} />
+            <div
+              className="float-right"
+              style={{ height: '1.5rem', width: '1.5rem' }}
+            >
+              <RefreshButton refresh={async () => this.props.refresh!()} />
             </div>
           )}
           {this.props.subscribeToggleStore && (
@@ -75,10 +78,12 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
                   </tr>
                 </thead>
               )}
-              <tbody>{this.props.filterRow && 
-              this.props.filterToggleStore?.isPressed
-                      ? this.props.rows.filter(this.props.filterRow).map(this.props.renderRow)
-                      : this.props.rows.map(this.props.renderRow)}
+              <tbody>
+                {this.props.filterRow && this.props.filterToggleStore?.isPressed
+                  ? this.props.rows
+                      .filter(this.props.filterRow)
+                      .map(this.props.renderRow)
+                  : this.props.rows.map(this.props.renderRow)}
               </tbody>
             </table>
           )}

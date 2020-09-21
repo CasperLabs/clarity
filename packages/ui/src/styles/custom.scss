@@ -53,6 +53,12 @@ body.sidenav-toggled {
 
 .icon-button {
   cursor: pointer;
+  text-decoration: none !important;
+}
+
+.refresh-button-div {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 button.link {

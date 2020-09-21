@@ -52,7 +52,7 @@ export class ValidatorsContainer {
   @action.bound
   async refresh() {
     this.latestFinalizedBlock = await this.casperService.getLastFinalizedBlockInfo();
-    this.getValidatorInfos();
+    await this.getValidatorInfos();
   }
 
   @computed

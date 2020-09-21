@@ -24,8 +24,8 @@ interface Props {
 
 @observer
 class Vesting extends RefreshableComponent<Props, {}> {
-  refresh() {
-    this.props.auth.refreshAccounts();
+  async refresh() {
+    await this.props.auth.refreshAccounts();
   }
 
   render() {
@@ -185,7 +185,7 @@ const VestingDetails = observer(
   (props: {
     vestingDetail: VestingDetail;
     hash: string;
-    refresh: () => void;
+    refresh: () => Promise<void>;
   }) => {
     const vestingDetail = props.vestingDetail;
     return (

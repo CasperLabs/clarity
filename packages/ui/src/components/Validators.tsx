@@ -20,8 +20,8 @@ class Validators extends RefreshableComponent<Props, {}> {
     this.props.validatorsContainer.toggleableSubscriber.unsubscribeAndFree();
   }
 
-  refresh(): void {
-    this.props.validatorsContainer.refresh();
+  async refresh(): Promise<void> {
+    await this.props.validatorsContainer.refresh();
     this.props.validatorsContainer.toggleableSubscriber.setUpSubscriber();
   }
 

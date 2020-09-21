@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import AuthContainer from '../containers/AuthContainer';
@@ -49,9 +49,35 @@ export const IconButton = (props: {
   </button>
 );
 
-export const RefreshButton = (props: { refresh: () => void }) => (
-  <IconButton onClick={() => props.refresh()} title="Refresh" icon="redo" />
-);
+export const RefreshButton = (props: { refresh: () => Promise<void> }) => {
+  let [spin, setSpin] = useState<boolean>();
+  return (
+    <span
+      onClick={async () => {
+        setSpin(true);
+        try {
+          await props.refresh();
+        } finally {
+          setTimeout(function() {
+            setSpin(false);
+          }, 500);
+        }
+      }}
+      title="Refresh"
+      className="link icon-button"
+    >
+      {spin && (
+        <span
+          className="spinner-border spinner-border-sm"
+          role="status"
+          aria-hidden="true"
+          style={{ textAlign: 'center', verticalAlign: 'middle' }}
+        />
+      )}
+      {!spin && <Icon name="redo" />}
+    </span>
+  );
+};
 
 export const Button = (props: {
   onClick: () => void;
@@ -98,7 +124,7 @@ export const ListInline = (props: { children: any }) => {
 // add a method here to start a timer which should be
 // stopped in `componentWillUnmount`.
 export abstract class RefreshableComponent<P, S> extends React.Component<P, S> {
-  abstract refresh(): void;
+  abstract refresh(): Promise<void>;
 
   protected refreshIntervalMillis: number = 0;
   protected timerId: number = 0;
@@ -175,15 +201,17 @@ export const Card = (props: {
   title: string;
   children: any;
   footerMessage?: any;
-  refresh?: () => void;
+  refresh?: () => Promise<void>;
   accordionId?: string;
 }) => {
   let cardHeader = (
     <div>
       <a className="card-title">{props.title}</a>
-      <div className="float-right">
-        {props.refresh && <RefreshButton refresh={() => props.refresh!()} />}
-      </div>
+      {props.refresh && (
+        <div className="float-right refresh-button-div">
+          <RefreshButton refresh={() => props.refresh!()} />
+        </div>
+      )}
     </div>
   );
   return (
