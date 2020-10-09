@@ -477,27 +477,42 @@ const Alerts = observer((props: AppProps) => {
   );
 });
 
-const Footer = () => (
-  <section>
-    <footer className="sticky-footer">
-      <div className="container">
-        <div className="text-center">
-          <small>
-            Get in touch on{' '}
-            <a href="https://discordapp.com/invite/Q38s3Vh">Discord</a> or {}
-            <a
-              href="https://t.me/casperlabs"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Telegram
-            </a>
-          </small>
+const Footer = () => {
+  const [latestSHA, setLatestSHA] = React.useState(null);
+  React.useEffect(() => {
+    async function myAsyncFunction() {
+      console.log('footer cmd');
+      const result = await fetch(
+        'https://api.github.com/repos/casperlabs/casper-node/commits/master'
+      );
+      const resultJson = await result.json();
+      setLatestSHA(resultJson.sha);
+    }
+    myAsyncFunction();
+  }, []);
+  return (
+    <section>
+      <footer className="sticky-footer">
+        <div className="container">
+          <div className="text-center">
+            <small>
+              Get in touch on{' '}
+              <a href="https://discordapp.com/invite/Q38s3Vh">Discord</a> or {}
+              <a
+                href="https://t.me/casperlabs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Telegram
+              </a>
+              <span className="d-block">{latestSHA}</span>
+            </small>
+          </div>
         </div>
-      </div>
-    </footer>
-    <a className="scroll-to-top rounded" href="#page-top">
-      <i className="fa fa-angle-up"></i>
-    </a>
-  </section>
-);
+      </footer>
+      <a className="scroll-to-top rounded" href="#page-top">
+        <i className="fa fa-angle-up"></i>
+      </a>
+    </section>
+  );
+};

@@ -4,11 +4,10 @@ footer.sticky-footer {
   bottom: 0;
 
   width: 100%;
-  height: 56px;
+  height: 55px;
 
   background-color: $gray-200;
 
-  line-height: 55px;
   @media (min-width: 992px) {
     width: calc(100% - #{$sidenav-base-width});
   }
