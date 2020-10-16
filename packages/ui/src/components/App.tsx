@@ -84,7 +84,7 @@ class GroupedMenuItem {
           data-target={`#${this.id}`}
           aria-controls={this.id}
         >
-          <div style={{ margin: '0 10px 0 20px' }}>{this.icon}</div>
+          <div className="nav-link-icon">{this.icon}</div>
           <span className="nav-link-text">{this.label}</span>
           <div className="sidenav-collapse-arrow">
             <i className="fas fa-angle-down" />
@@ -111,52 +111,48 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   new MenuItem(
     Pages.Accounts,
     'Accounts',
-    (<IoMdKey fontSize={SideMenuIconSize} />)
+    <IoMdKey fontSize={SideMenuIconSize + 4} />
   ),
   new MenuItem(
     Pages.Faucet,
     'Faucet',
-    (<IoIosWater fontSize={SideMenuIconSize} />)
+    <IoIosWater fontSize={SideMenuIconSize + 4} />
   ),
   new MenuItem(
     Pages.DeployContracts,
     'Deploy Contract',
-    (<IoMdRocket fontSize={SideMenuIconSize} />)
+    <IoMdRocket fontSize={SideMenuIconSize + 4} />
   ),
   new MenuItem(
     Pages.Explorer,
     'Explorer',
-    (<FaMapMarkedAlt fontSize={SideMenuIconSize} />)
+    <FaMapMarkedAlt fontSize={SideMenuIconSize} />
   ),
-  new MenuItem(
-    Pages.Blocks,
-    'Blocks',
-    (<FiGrid fontSize={SideMenuIconSize} />)
-  ),
+  new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
   new MenuItem(
     Pages.Deploys,
     'Deploys',
-    (<FaListUl fontSize={SideMenuIconSize} />)
+    <FaListUl fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.Search,
     'Search',
-    (<FaSearch fontSize={SideMenuIconSize} />)
+    <FaSearch fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.Validators,
     'Validators',
-    (<MdGroup fontSize={SideMenuIconSize} />)
+    <MdGroup fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.ConnectedPeers,
     'Connected Peers',
-    (<FaNetworkWired fontSize={SideMenuIconSize} />)
+    <FaNetworkWired fontSize={SideMenuIconSize} />
   ),
   new GroupedMenuItem(
     'clarityContracts',
     'Contracts',
-    (<FaFileContract fontSize={SideMenuIconSize} />),
+    <FaFileContract fontSize={SideMenuIconSize} />,
     [new MenuItem(Pages.Vesting, 'Vesting')]
   )
 ];
@@ -201,7 +197,7 @@ export default class App extends React.Component<AppProps, {}> {
     // })
 
     // Toggle the side navigation
-    $('#sidenavToggler').click(function(e) {
+    $('#sidenavToggler').click(function (e) {
       e.preventDefault();
       $('body').toggleClass('sidenav-toggled');
       $('.navbar-sidenav .nav-link-collapse').addClass('collapsed');
@@ -213,14 +209,14 @@ export default class App extends React.Component<AppProps, {}> {
     // Hide sidenav manually after clicking menu item in mobile view
     // $("#navbarResponsive") is a responsive component which can only collapsed
     // in mobile view.
-    $('.navbar-sidenav .nav-item').click(function(e) {
+    $('.navbar-sidenav .nav-item').click(function (e) {
       $('#navbarResponsive').collapse('hide');
     });
 
     // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
     $(
       'body.fixed-nav .navbar-sidenav, body.fixed-nav .sidenav-toggler, body.fixed-nav .navbar-collapse'
-    ).on('mousewheel DOMMouseScroll', function(e: any) {
+    ).on('mousewheel DOMMouseScroll', function (e: any) {
       var e0 = e.originalEvent,
         delta = e0.wheelDelta || -e0.detail;
       this.scrollTop += (delta < 0 ? 1 : -1) * 30;
@@ -228,7 +224,7 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top button appear
-    $(document).scroll(function() {
+    $(document).scroll(function () {
       var scrollDistance = $(this).scrollTop()!;
       if (scrollDistance > 100) {
         $('.scroll-to-top').fadeIn();
@@ -238,17 +234,15 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top
-    $(document).on('click', 'a.scroll-to-top', function(e) {
+    $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body')
-        .stop()
-        .animate(
-          {
-            scrollTop: offset.top
-          },
-          1000
-        );
+      $('html, body').stop().animate(
+        {
+          scrollTop: offset.top
+        },
+        1000
+      );
       e.preventDefault();
     });
   }
@@ -272,7 +266,7 @@ const NavLink = (props: { item: MenuItem }) => {
             data-placement="right"
           >
             <Link to={item.path} className="nav-link">
-              <div style={{ margin: '0 10px 0 20px' }}>{item.icon}</div>
+              <div className="nav-link-icon">{item.icon}</div>
               <span className="nav-link-text">{item.label}</span>
             </Link>
           </li>

@@ -168,3 +168,11 @@ footer.sticky-footer {
     color: #ffffff;
   }
 }
+
+@media (min-width: 992px) {
+  .navbar-nav.navbar-sidenav {
+    li:first-child {
+      margin-top: 10px;
+    }
+  }
+}
