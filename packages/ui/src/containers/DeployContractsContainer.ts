@@ -1,7 +1,7 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { DeployUtil, CasperServiceByJsonRPC } from 'casperlabs-sdk';
+import { DeployUtil, CasperServiceByJsonRPC, Signer } from 'casperlabs-sdk';
 import { FieldState, FormState } from 'formstate';
 import {
   numberGreaterThan,
