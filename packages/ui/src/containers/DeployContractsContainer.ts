@@ -294,20 +294,27 @@ export class DeployContractsContainer {
     });
   }
 
+  async checkConnectionToSigner() {
+    let connected = await Signer.isConnected();
+    return connected;
+  }
+
   @action.bound
   async _onSubmit() {
-    return true;
-    // this.deployedHash = null;
-    // if (!Signer.isConnected()) {
-    //   throw new Error(
-    //     'Please install the CasperLabs Sign Helper Plugin first!'
-    //   );
-    // }
-    //
-    // const publicKeyBase64 = await Signer.getSelectedPublicKeyBase64();
-    // if (!publicKeyBase64) {
-    //   throw new Error('Please create an account in the Plugin first!');
-    // }
+    this.deployedHash = null;
+
+    let connected = await this.checkConnectionToSigner();
+
+    if (!connected) {
+      throw new Error(
+        'Please install/connect the CasperLabs Signer extension first!'
+      );
+    }
+
+    const publicKeyBase64 = await Signer.getSelectedPublicKeyBase64();
+    if (!publicKeyBase64) {
+      throw new Error('Please create an account in the Plugin first!');
+    }
     // Todo: (ECO-441) make Signer return publicKeyHash directly
     // const publicKeyHash = publicKeyHashForEd25519(publicKeyBase64);
     // let deploy = await this.makeDeploy(publicKeyHash);
@@ -402,8 +409,8 @@ export class DeployContractsContainer {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
-    let restoreDeployArgument = function(arg: RawDeployArguments) {
-      let helper = function(
+    let restoreDeployArgument = (arg: RawDeployArguments) => {
+      let helper = function (
         innerDeployArg: DeployArgument,
         mapArg: RawDeployArguments
       ) {
