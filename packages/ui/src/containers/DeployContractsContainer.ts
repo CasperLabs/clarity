@@ -294,6 +294,11 @@ export class DeployContractsContainer {
     });
   }
 
+  async checkConnectionToSigner() {
+    let connected = await Signer.isConnected();
+    return connected;
+  }
+
   @action.bound
   async _onSubmit() {
     return true;
@@ -402,8 +407,8 @@ export class DeployContractsContainer {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
-    let restoreDeployArgument = function(arg: RawDeployArguments) {
-      let helper = function(
+    let restoreDeployArgument = (arg: RawDeployArguments) => {
+      let helper = function (
         innerDeployArg: DeployArgument,
         mapArg: RawDeployArguments
       ) {

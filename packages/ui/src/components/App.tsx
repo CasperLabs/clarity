@@ -12,7 +12,7 @@ import Accounts from './Accounts';
 import Faucet from './Faucet';
 import Explorer from './Explorer';
 import BlockList from './BlockList';
-import { PrivateRoute, RefreshableComponent, Title } from './Utils';
+import { PrivateRoute, RefreshableComponent, Title, Button } from './Utils';
 import AuthContainer from '../containers/AuthContainer';
 import FaucetContainer from '../containers/FaucetContainer';
 import ErrorContainer from '../containers/ErrorContainer';
@@ -36,6 +36,7 @@ import ReactGA from 'react-ga';
 import Validators from './Validators';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
+import { Signer } from 'casperlabs-sdk';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
 
@@ -145,7 +146,7 @@ export default class App extends React.Component<AppProps, {}> {
     // })
 
     // Toggle the side navigation
-    $('#sidenavToggler').click(function(e) {
+    $('#sidenavToggler').click(function (e) {
       e.preventDefault();
       $('body').toggleClass('sidenav-toggled');
       $('.navbar-sidenav .nav-link-collapse').addClass('collapsed');
@@ -157,14 +158,14 @@ export default class App extends React.Component<AppProps, {}> {
     // Hide sidenav manually after clicking menu item in mobile view
     // $("#navbarResponsive") is a responsive component which can only collapsed
     // in mobile view.
-    $('.navbar-sidenav .nav-item').click(function(e) {
+    $('.navbar-sidenav .nav-item').click(function (e) {
       $('#navbarResponsive').collapse('hide');
     });
 
     // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
     $(
       'body.fixed-nav .navbar-sidenav, body.fixed-nav .sidenav-toggler, body.fixed-nav .navbar-collapse'
-    ).on('mousewheel DOMMouseScroll', function(e: any) {
+    ).on('mousewheel DOMMouseScroll', function (e: any) {
       var e0 = e.originalEvent,
         delta = e0.wheelDelta || -e0.detail;
       this.scrollTop += (delta < 0 ? 1 : -1) * 30;
@@ -172,7 +173,7 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top button appear
-    $(document).scroll(function() {
+    $(document).scroll(function () {
       var scrollDistance = $(this).scrollTop()!;
       if (scrollDistance > 100) {
         $('.scroll-to-top').fadeIn();
@@ -182,17 +183,15 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top
-    $(document).on('click', 'a.scroll-to-top', function(e) {
+    $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body')
-        .stop()
-        .animate(
-          {
-            scrollTop: offset.top
-          },
-          1000
-        );
+      $('html, body').stop().animate(
+        {
+          scrollTop: offset.top
+        },
+        1000
+      );
       e.preventDefault();
     });
   }
@@ -245,6 +244,13 @@ class _Navigation extends RefreshableComponent<
     this.props.connectedPeersContainer.refreshPeers();
     this.props.networkInfoContainer.refresh();
   }
+
+  async signerConnectionStateText() {
+    const result = await Signer.isConnected();
+    const buttonText = result ? 'Connected' : 'Connect to Signer';
+    return buttonText;
+  }
+
   render() {
     return (
       <nav
@@ -309,10 +315,26 @@ class _Navigation extends RefreshableComponent<
                   <i className="fa fa-fw fa-sign-out-alt"></i>Sign Out
                 </a>
               ) : (
-                <a className="nav-link" onClick={_ => this.props.auth.login()}>
+                <a
+                  className="nav-link text-center"
+                  onClick={_ => this.props.auth.login()}
+                >
                   <i className="fa fa-fw fa-sign-in-alt"></i>Sign In
                 </a>
               )}
+            </li>
+            {/* George: Styling and spacing needs improving here */}
+            <li className="nav-item">
+              <Button
+                onClick={() => {
+                  Signer.sendConnectionRequest();
+                }}
+                title={'Connect to Signer'}
+                // Make button state/appearance conditional on connected or not
+                disabled={false}
+                type={'primary'}
+                size={'sm'}
+              />
             </li>
           </ul>
         </div>
