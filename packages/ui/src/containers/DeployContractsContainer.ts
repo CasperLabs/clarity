@@ -301,20 +301,18 @@ export class DeployContractsContainer {
 
   @action.bound
   async _onSubmit() {
-    this.deployedHash = null;
-
-    let connected = await this.checkConnectionToSigner();
-
-    if (!connected) {
-      throw new Error(
-        'Please install/connect the CasperLabs Signer extension first!'
-      );
-    }
-
-    const publicKeyBase64 = await Signer.getSelectedPublicKeyBase64();
-    if (!publicKeyBase64) {
-      throw new Error('Please create an account in the Plugin first!');
-    }
+    return true;
+    // this.deployedHash = null;
+    // if (!Signer.isConnected()) {
+    //   throw new Error(
+    //     'Please install the CasperLabs Sign Helper Plugin first!'
+    //   );
+    // }
+    //
+    // const publicKeyBase64 = await Signer.getSelectedPublicKeyBase64();
+    // if (!publicKeyBase64) {
+    //   throw new Error('Please create an account in the Plugin first!');
+    // }
     // Todo: (ECO-441) make Signer return publicKeyHash directly
     // const publicKeyHash = publicKeyHashForEd25519(publicKeyBase64);
     // let deploy = await this.makeDeploy(publicKeyHash);
