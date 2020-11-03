@@ -57,7 +57,7 @@
     "validator": "^12.2.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_GIT_SHA=`git rev-parse origin/node-rs` react-scripts start",
     "build": "CI=false react-scripts build",
     "clean": "rm -rf build",
     "test": "react-scripts test",
