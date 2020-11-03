@@ -484,18 +484,6 @@ const Alerts = observer((props: AppProps) => {
 });
 
 const Footer = () => {
-  const [latestSHA, setLatestSHA] = React.useState(null);
-  React.useEffect(() => {
-    async function myAsyncFunction() {
-      console.log('footer cmd');
-      const result = await fetch(
-        'https://api.github.com/repos/casperlabs/casper-node/commits/master'
-      );
-      const resultJson = await result.json();
-      setLatestSHA(resultJson.sha);
-    }
-    myAsyncFunction();
-  }, []);
   return (
     <section>
       <footer className="sticky-footer">
@@ -511,7 +499,7 @@ const Footer = () => {
               >
                 Telegram
               </a>
-              <span className="d-block">{latestSHA}</span>
+              <span className="d-block">{process.env.REACT_APP_GIT_SHA}</span>
             </small>
           </div>
         </div>

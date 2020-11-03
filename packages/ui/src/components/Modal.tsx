@@ -7,7 +7,7 @@ interface Props {
   title: string;
   submitLabel?: string;
   // Submit, then return if the windows can be closed.
-  onSubmit: () => Promise<boolean>;
+  onSubmit: () => Promise<boolean | void>;
   onClose: () => void;
   // Display any feedback after submission or editing.
   error?: any;
