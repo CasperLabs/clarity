@@ -29,14 +29,34 @@ steps:
   - name: docker_sock
     path: "/var/run/docker.sock"
 
+- name: docker-publish-pr
+  commands:
+  - |
+      echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      docker push casperlabs/explorer:DRONE-${DRONE_BUILD_NUMBER}
+  image: "casperlabs/buildenv:latest"
+  environment:
+    DOCKER_PASSWORD:
+      from_secret: docker_password
+    DOCKER_USERNAME:
+      from_secret: docker_username
+  volumes:
+  - name: docker_sock
+    path: "/var/run/docker.sock"
+  when:
+    event:
+    - pull_request
+    branch:
+    - master
+  depends_on:
+  - build-docker-image
+
 - name: docker-publish
   commands:
   - |
       echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
       docker tag casperlabs/explorer:DRONE-${DRONE_BUILD_NUMBER} casperlabs/explorer:latest
-      docker tag casperlabs/grpcwebproxy:DRONE-${DRONE_BUILD_NUMBER} casperlabs/grpcwebproxy:latest
       docker push casperlabs/explorer:latest
-      docker push casperlabs/grpcwebproxy:latest
   image: "casperlabs/buildenv:latest"
   environment:
     DOCKER_PASSWORD:
@@ -106,3 +126,149 @@ trigger:
 
 depends_on:
 - build-publish
+
+
+---
+kind: pipeline
+name: deploy-test
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  disable: true
+
+steps:
+- name: deploy-internal
+  pull: default
+  image: appleboy/drone-ssh
+  settings:
+    command_timeout: 2m
+    port: 22
+    script: |
+      set -ex
+      cd /opt/clarity
+      docker pull casperlabs/explorer:DRONE-${DRONE_BUILD_NUMBER}
+      docker tag casperlabs/explorer:DRONE-${DRONE_BUILD_NUMBER} casperlabs/explorer:latest
+      docker-compose up -d
+  environment:
+    SSH_HOST:
+      from_secret: ssh_host_pr
+    SSH_KEY:
+      from_secret: ssh_key_pr
+    SSH_USERNAME:
+      from_secret: ssh_username_pr
+  when:
+    event:
+    - pull_request
+  depends_on:
+  - docker-publish-pr
+
+---
+kind: pipeline
+name: deploy-prod
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  disable: true
+
+steps:
+- name: deploy-external
+  pull: default
+  image: appleboy/drone-ssh
+  settings:
+    command_timeout: 2m
+    port: 22
+    script: |
+      set -ex
+      cd /opt/clarity
+      docker-compose pull explorer
+      docker-compose up -d
+  environment:
+    SSH_HOST:
+      from_secret: ssh_host
+    SSH_KEY:
+      from_secret: ssh_key
+    SSH_USERNAME:
+      from_secret: ssh_username
+  when:
+    event:
+    - push
+  depends_on:
+  - docker-publish
+
+trigger:
+  branch:
+    - master
+    - "release-*"
+
+---
+kind: pipeline
+name: alert-for-test
+
+clone:
+  disable: true
+
+steps:
+- name: notify-web-test-deployed
+  pull: default
+  image: plugins/slack
+  settings:
+    template:
+    - |
+      Staging deploy: {{#success build.status}}✔{{ else }}✘{{/success}}*{{ uppercasefirst build.status }}*
+      {{#success build.status}} PR preview available on http://lrt2-clarity.casperlabs.io/{{/success}}
+      Author: {{ build.author }}
+      Drone Build: <{{ build.link }}|#{{ build.number }}>
+      Commit Link: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{ truncate build.commit 10 }}>
+    webhook:
+      from_secret: slack_webhook
+
+trigger:
+  status:
+  - success
+  - failure
+  branch:
+  - master
+  event:
+  - pull_request
+
+depends_on:
+- deploy-test
+
+---
+kind: pipeline
+name: alert-for-prod
+
+clone:
+  disable: true
+
+steps:
+- name: notify-web-prod-deployed
+  pull: default
+  image: plugins/slack
+  settings:
+    template:
+    - |
+      Production deploy: {{#success build.status}}✔{{ else }}✘{{/success}}*{{ uppercasefirst build.status }}*
+      Author: {{ build.author }}
+      Drone Build: <{{ build.link }}|#{{ build.number }}>
+      Commit Link: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{ truncate build.commit 10 }}>
+    webhook:
+      from_secret: slack_webhook
+
+trigger:
+  status:
+  - success
+  - failure
+  branch:
+  - master
+  event:
+  - push
+
+depends_on:
+- deploy-prod
