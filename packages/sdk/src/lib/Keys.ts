@@ -66,16 +66,16 @@ export function readBase64WithPEM(content: string): ByteArray {
 
 export abstract class AsymmetricKey {
   public readonly publicKey: PublicKey;
-  public readonly privateKey: ByteArray;
+  public readonly secretKey: ByteArray;
   public readonly signatureAlgorithm: SignatureAlgorithm;
 
   constructor(
     publicKey: ByteArray,
-    privateKey: ByteArray,
+    secretKey: ByteArray,
     signatureAlgorithm: SignatureAlgorithm
   ) {
     this.publicKey = PublicKey.from(publicKey, signatureAlgorithm);
-    this.privateKey = privateKey;
+    this.secretKey = secretKey;
     this.signatureAlgorithm = signatureAlgorithm;
   }
 
@@ -106,9 +106,9 @@ export abstract class AsymmetricKey {
   public abstract exportPublicKeyInPem(): string;
 
   /**
-   * Expect the private key encoded in pem
+   * Expect the secret key encoded in pem
    */
-  public abstract exportPrivateKeyInPem(): string;
+  public abstract exportSecretKeyInPem(): string;
 
   /**
    * Sign the message by using the keyPair
@@ -146,20 +146,20 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   /**
-   * Parse the key pair from publicKey file and privateKey file
+   * Parse the key pair from publicKey file and secretKey file
    * @param publicKeyPath path of public key file
-   * @param privateKeyPath path of private key file
+   * @param secretKeyPath path of secret key file
    */
   public static getKeyPairFromFiles(
     publicKeyPath: string,
-    privateKeyPath: string
+    secretKeyPath: string
   ): AsymmetricKey {
     const publicKey = Ed25519.getPublicKeyFromPEMFile(publicKeyPath);
-    const privateKey = Ed25519.getSecretKeyFromPEMFile(privateKeyPath);
-    // nacl expects that the private key will contain both.
+    const secretKey = Ed25519.getSecretKeyFromPEMFile(secretKeyPath);
+    // nacl expects that the secret key will contain both.
     return new Ed25519({
       publicKey,
-      secretKey: Buffer.concat([privateKey, publicKey])
+      secretKey: Buffer.concat([secretKey, publicKey])
     });
   }
 
@@ -172,17 +172,17 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   /**
-   * Construct keyPair from a public key and private key
+   * Construct keyPair from a public key and secret key
    * @param publicKey
-   * @param privateKey
+   * @param secretKey
    */
   public static getKeyPairFromBytes(
     publicKey: ByteArray,
-    privateKey: ByteArray
+    secretKey: ByteArray
   ): AsymmetricKey {
     const publ = Ed25519.parsePublicKey(publicKey);
-    const priv = Ed25519.parsePrivateKey(privateKey);
-    // nacl expects that the private key will contain both.
+    const priv = Ed25519.parseSecretKey(secretKey);
+    // nacl expects that the secret key will contain both.
     return new Ed25519({
       publicKey: publ,
       secretKey: Buffer.concat([priv, publ])
@@ -190,14 +190,14 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   public static getSecretKeyFromPEMFile(path: string): ByteArray {
-    return Ed25519.parsePrivateKey(Ed25519.readBase64File(path));
+    return Ed25519.parseSecretKey(Ed25519.readBase64File(path));
   }
 
   public static getPublicKeyFromPEMFile(path: string): ByteArray {
     return Ed25519.parsePublicKey(Ed25519.readBase64File(path));
   }
 
-  public static parsePrivateKey(bytes: ByteArray) {
+  public static parseSecretKey(bytes: ByteArray) {
     return Ed25519.parseKey(bytes, 0, 32);
   }
 
@@ -234,15 +234,15 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   /**
-   * Export the private key encoded in pem
+   * Export the secret key encoded in pem
    */
-  public exportPrivateKeyInPem() {
+  public exportSecretKeyInPem() {
     // prettier-ignore
     const derPrefix = Buffer.from([48, 46, 2, 1, 0, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32]);
     const encoded = encodeBase64(
       Buffer.concat([
         derPrefix,
-        Buffer.from(Ed25519.parsePrivateKey(this.privateKey))
+        Buffer.from(Ed25519.parseSecretKey(this.secretKey))
       ])
     );
     return this.toPem(ED25519_PEM_SECRET_KEY_TAG, encoded);
@@ -265,7 +265,7 @@ export class Ed25519 extends AsymmetricKey {
    * @param msg
    */
   public sign(msg: ByteArray): ByteArray {
-    return nacl.sign_detached(msg, this.privateKey);
+    return nacl.sign_detached(msg, this.secretKey);
   }
 
   /**
@@ -282,31 +282,31 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   /**
-   * Derive public key from private key
-   * @param privateKey
+   * Derive public key from secret key
+   * @param secretKey
    */
-  public static getPublicKeyFromSecretKey(privateKey: ByteArray) {
-    if (privateKey.length === SignLength.SecretKey) {
-      return nacl.sign_keyPair_fromSecretKey(privateKey).publicKey;
+  public static getPublicKeyFromSecretKey(secretKey: ByteArray) {
+    if (secretKey.length === SignLength.SecretKey) {
+      return nacl.sign_keyPair_fromSecretKey(secretKey).publicKey;
     } else {
-      return nacl.sign_keyPair_fromSeed(privateKey).publicKey;
+      return nacl.sign_keyPair_fromSeed(secretKey).publicKey;
     }
   }
 
   /**
-   * Restore Ed25519 keyPair from private key file
-   * @param privateKeyPath
+   * Restore Ed25519 keyPair from secret key file
+   * @param secretKeyPath
    */
-  public static getKeyPairFromSecretPEMFile(privateKeyPath: string) {
-    const privateKey = Ed25519.getSecretKeyFromPEMFile(privateKeyPath);
-    const publicKey = Ed25519.getPublicKeyFromSecretKey(privateKey);
-    return Ed25519.getKeyPairFromBytes(publicKey, privateKey);
+  public static getKeyPairFromSecretPEMFile(secretKeyPath: string) {
+    const secretKey = Ed25519.getSecretKeyFromPEMFile(secretKeyPath);
+    const publicKey = Ed25519.getPublicKeyFromSecretKey(secretKey);
+    return Ed25519.getKeyPairFromBytes(publicKey, secretKey);
   }
 }
 
 export class Secp256K1 extends AsymmetricKey {
-  constructor(publicKey: ByteArray, privateKey: ByteArray) {
-    super(publicKey, privateKey, SignatureAlgorithm.Secp256K1);
+  constructor(publicKey: ByteArray, secretKey: ByteArray) {
+    super(publicKey, secretKey, SignatureAlgorithm.Secp256K1);
   }
 
   /**
@@ -315,22 +315,22 @@ export class Secp256K1 extends AsymmetricKey {
   public static new() {
     const keyPair = ec.genKeyPair();
     const publicKey = Uint8Array.from(keyPair.getPublic(true, 'array'));
-    const privateKey = keyPair.getPrivate().toBuffer();
-    return new Secp256K1(publicKey, privateKey);
+    const secretKey = keyPair.getPrivate().toBuffer();
+    return new Secp256K1(publicKey, secretKey);
   }
 
   /**
-   * Parse the key pair from publicKey file and privateKey file
+   * Parse the key pair from publicKey file and secretKey file
    * @param publicKeyPath path of public key file
-   * @param privateKeyPath path of private key file
+   * @param secretKeyPath path of secret key file
    */
   public static getKeyPairFromFiles(
     publicKeyPath: string,
-    privateKeyPath: string
+    secretKeyPath: string
   ): AsymmetricKey {
     const publicKey = Secp256K1.getPublicKeyFromPEMFile(publicKeyPath);
-    const privateKey = Secp256K1.getSecretKeyFromPEMFile(privateKeyPath);
-    return new Secp256K1(publicKey, privateKey);
+    const secretKey = Secp256K1.getSecretKeyFromPEMFile(secretKeyPath);
+    return new Secp256K1(publicKey, secretKey);
   }
 
   /**
@@ -342,31 +342,31 @@ export class Secp256K1 extends AsymmetricKey {
   }
 
   /**
-   * Construct keyPair from public key and private key
+   * Construct keyPair from public key and secret key
    * @param publicKey
-   * @param privateKey
-   * @param originalFormat the format of the public/private key
+   * @param secretKey
+   * @param originalFormat the format of the public/secret key
    */
   public static getKeyPairFromBytes(
     publicKey: ByteArray,
-    privateKey: ByteArray,
+    secretKey: ByteArray,
     originalFormat: 'raw' | 'der'
   ): AsymmetricKey {
     const publ = Secp256K1.parsePublicKey(publicKey, originalFormat);
-    const priv = Secp256K1.parsePrivateKey(privateKey, originalFormat);
-    // nacl expects that the private key will contain both.
+    const priv = Secp256K1.parseSecretKey(secretKey, originalFormat);
+    // nacl expects that the secret key will contain both.
     return new Secp256K1(publ, priv);
   }
 
   public static getSecretKeyFromPEMFile(path: string): ByteArray {
-    return Secp256K1.parsePrivateKey(Secp256K1.readBase64File(path));
+    return Secp256K1.parseSecretKey(Secp256K1.readBase64File(path));
   }
 
   public static getPublicKeyFromPEMFile(path: string): ByteArray {
     return Secp256K1.parsePublicKey(Secp256K1.readBase64File(path));
   }
 
-  public static parsePrivateKey(
+  public static parseSecretKey(
     bytes: ByteArray,
     originalFormat: 'der' | 'raw' = 'der'
   ) {
@@ -376,11 +376,11 @@ export class Secp256K1 extends AsymmetricKey {
     } else {
       rawKeyHex = encodeBase16(bytes);
     }
-    const privateKey = ec
+    const secretKey = ec
       .keyFromPrivate(rawKeyHex, 'hex')
       .getPrivate()
       .toBuffer();
-    return privateKey;
+    return secretKey;
   }
 
   public static parsePublicKey(
@@ -415,14 +415,10 @@ export class Secp256K1 extends AsymmetricKey {
   }
 
   /**
-   * Export the private key encoded in pem
+   * Export the secret key encoded in pem
    */
-  public exportPrivateKeyInPem(): string {
-    return keyEncoder.encodePrivate(
-      encodeBase16(this.privateKey),
-      'raw',
-      'pem'
-    );
+  public exportSecretKeyInPem(): string {
+    return keyEncoder.encodePrivate(encodeBase16(this.secretKey), 'raw', 'pem');
   }
 
   /**
@@ -441,7 +437,7 @@ export class Secp256K1 extends AsymmetricKey {
    * @param msg
    */
   public sign(msg: ByteArray): ByteArray {
-    const res = secp256k1.ecdsaSign(sha256(Buffer.from(msg)), this.privateKey);
+    const res = secp256k1.ecdsaSign(sha256(Buffer.from(msg)), this.secretKey);
     return res.signature;
   }
 
@@ -459,21 +455,21 @@ export class Secp256K1 extends AsymmetricKey {
   }
 
   /**
-   * Derive public key from private key
-   * @param privateKey
+   * Derive public key from secret key
+   * @param secretKey
    */
-  public static getPublicKeyFromSecretKey(privateKey: ByteArray): ByteArray {
-    return secp256k1.publicKeyCreate(privateKey, true);
+  public static getPublicKeyFromSecretKey(secretKey: ByteArray): ByteArray {
+    return secp256k1.publicKeyCreate(secretKey, true);
   }
 
   /**
-   * Restore Secp256K1 keyPair from private key file
-   * @param privateKeyPath a path to file of the private key
+   * Restore Secp256K1 keyPair from secret key file
+   * @param secretKeyPath a path to file of the secret key
    */
-  public static getKeyPairFromSecretPEMFile(privateKeyPath: string) {
-    const privateKey = Secp256K1.getSecretKeyFromPEMFile(privateKeyPath);
-    const publicKey = Secp256K1.getPublicKeyFromSecretKey(privateKey);
-    return Secp256K1.getKeyPairFromBytes(publicKey, privateKey, 'raw');
+  public static getKeyPairFromSecretPEMFile(secretKeyPath: string) {
+    const secretKey = Secp256K1.getSecretKeyFromPEMFile(secretKeyPath);
+    const publicKey = Secp256K1.getPublicKeyFromSecretKey(secretKey);
+    return Secp256K1.getKeyPairFromBytes(publicKey, secretKey, 'raw');
   }
 
   /**

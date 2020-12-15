@@ -31,11 +31,11 @@ describe('Ed25519', () => {
   it('should generate PEM file for Ed25519 correctly', () => {
     const naclKeyPair = Ed25519.new();
     const publicKeyInPem = naclKeyPair.exportPublicKeyInPem();
-    const privateKeyInPem = naclKeyPair.exportPrivateKeyInPem();
+    const secretKeyInPem = naclKeyPair.exportSecretKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
-    fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
+    fs.writeFileSync(tempDir + '/private.pem', secretKeyInPem);
     const signKeyPair2 = Ed25519.getKeyPairFromFiles(
       tempDir + '/public.pem',
       tempDir + '/private.pem'
@@ -45,13 +45,13 @@ describe('Ed25519', () => {
     expect(encodeBase64(naclKeyPair.publicKey.rawPublicKey)).to.equal(
       encodeBase64(signKeyPair2.publicKey.rawPublicKey)
     );
-    expect(encodeBase64(naclKeyPair.privateKey)).to.equal(
-      encodeBase64(signKeyPair2.privateKey)
+    expect(encodeBase64(naclKeyPair.secretKey)).to.equal(
+      encodeBase64(signKeyPair2.secretKey)
     );
 
     // import pem file to nodejs std library
     const pubKeyImported = Crypto.createPublicKey(publicKeyInPem);
-    const priKeyImported = Crypto.createPrivateKey(privateKeyInPem);
+    const priKeyImported = Crypto.createPrivateKey(secretKeyInPem);
     expect(pubKeyImported.asymmetricKeyType).to.equal('ed25519');
 
     // expect nodejs std lib export the same pem.
@@ -59,19 +59,19 @@ describe('Ed25519', () => {
       type: 'spki',
       format: 'pem'
     });
-    const privateKeyInPemFromNode = priKeyImported.export({
+    const secretKeyInPemFromNode = priKeyImported.export({
       type: 'pkcs8',
       format: 'pem'
     });
     expect(publicKeyInPemFromNode).to.equal(publicKeyInPem);
-    expect(privateKeyInPemFromNode).to.equal(privateKeyInPem);
+    expect(secretKeyInPemFromNode).to.equal(secretKeyInPem);
 
     // expect both of they generate the same signature
     const message = Buffer.from('hello world');
     const signatureByNode = Crypto.sign(null, message, priKeyImported);
     const signatureByNacl = nacl.sign_detached(
       Buffer.from(message),
-      naclKeyPair.privateKey
+      naclKeyPair.secretKey
     );
     expect(encodeBase64(signatureByNode)).to.eq(encodeBase64(signatureByNacl));
 
@@ -129,11 +129,11 @@ describe('Secp256K1', () => {
 
     // export key in pem to save
     const publicKeyInPem = signKeyPair.exportPublicKeyInPem();
-    const privateKeyInPem = signKeyPair.exportPrivateKeyInPem();
+    const secretKeyInPem = signKeyPair.exportSecretKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
-    fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
+    fs.writeFileSync(tempDir + '/private.pem', secretKeyInPem);
 
     // expect importing keys from pem files works well
     expect(
@@ -141,7 +141,7 @@ describe('Secp256K1', () => {
     ).to.deep.eq(signKeyPair.publicKey.rawPublicKey);
     expect(
       Secp256K1.getSecretKeyFromPEMFile(tempDir + '/private.pem')
-    ).to.deep.eq(signKeyPair.privateKey);
+    ).to.deep.eq(signKeyPair.secretKey);
 
     const signKeyPair2 = Secp256K1.getKeyPairFromFiles(
       tempDir + '/public.pem',
@@ -152,13 +152,13 @@ describe('Secp256K1', () => {
     expect(encodeBase64(signKeyPair.publicKey.rawPublicKey)).to.equal(
       encodeBase64(signKeyPair2.publicKey.rawPublicKey)
     );
-    expect(encodeBase64(signKeyPair.privateKey)).to.equal(
-      encodeBase64(signKeyPair2.privateKey)
+    expect(encodeBase64(signKeyPair.secretKey)).to.equal(
+      encodeBase64(signKeyPair2.secretKey)
     );
 
     // import pem file to nodejs std library
     const ecdh = Crypto.createECDH('secp256k1');
-    ecdh.setPrivateKey(signKeyPair.privateKey);
+    ecdh.setPrivateKey(signKeyPair.secretKey);
     expect(ecdh.getPublicKey('hex', 'compressed')).to.deep.equal(
       encodeBase16(signKeyPair.publicKey.rawPublicKey)
     );

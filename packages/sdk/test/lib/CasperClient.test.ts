@@ -17,45 +17,45 @@ describe('CasperClient', () => {
     );
   });
 
-  it('should generate new Ed25519 key pair, and compute public key from private key', () => {
+  it('should generate new Ed25519 key pair, and compute public key from secret key', () => {
     const edKeyPair = casperClient.getKeyPair(SignatureAlgorithm.Ed25519);
     const publicKey = edKeyPair.publicKey.rawPublicKey;
-    const privateKey = edKeyPair.privateKey;
-    const convertFromPrivateKey = casperClient.privateToPublicKey(
-      privateKey,
+    const secretKey = edKeyPair.secretKey;
+    const convertFromSecretKey = casperClient.getPublicKeyFromSecretKey(
+      secretKey,
       SignatureAlgorithm.Ed25519
     );
-    expect(convertFromPrivateKey).to.deep.equal(publicKey);
+    expect(convertFromSecretKey).to.deep.equal(publicKey);
   });
 
   it('should generate PEM file for Ed25519 correctly', () => {
     const edKeyPair = casperClient.getKeyPair(SignatureAlgorithm.Ed25519);
     const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
-    const privateKeyInPem = edKeyPair.exportPrivateKeyInPem();
+    const secretKeyInPem = edKeyPair.exportSecretKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
-    fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
+    fs.writeFileSync(tempDir + '/private.pem', secretKeyInPem);
     const publicKeyFromFIle = casperClient.getPublicKeyFromPEMFile(
       tempDir + '/public.pem',
       SignatureAlgorithm.Ed25519
     );
-    const privateKeyFromFile = casperClient.getSecretKeyFromPEMFile(
+    const secretKeyFromFile = casperClient.getSecretKeyFromPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Ed25519
     );
 
     const keyPairFromFile = Keys.Ed25519.getKeyPairFromBytes(
       publicKeyFromFIle,
-      privateKeyFromFile
+      secretKeyFromFile
     );
 
     expect(keyPairFromFile.publicKey.rawPublicKey).to.deep.equal(
       edKeyPair.publicKey.rawPublicKey
     );
-    expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
+    expect(keyPairFromFile.secretKey).to.deep.equal(edKeyPair.secretKey);
 
-    // load the keypair from pem file of private key
+    // load the keypair from pem file of secret key
     const loadedKeyPair = casperClient.getKeyPairFromSecretPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Ed25519
@@ -63,18 +63,18 @@ describe('CasperClient', () => {
     expect(loadedKeyPair.publicKey.rawPublicKey).to.deep.equal(
       edKeyPair.publicKey.rawPublicKey
     );
-    expect(loadedKeyPair.privateKey).to.deep.equal(edKeyPair.privateKey);
+    expect(loadedKeyPair.secretKey).to.deep.equal(edKeyPair.secretKey);
   });
 
-  it('should generate new Secp256K1 key pair, and compute public key from private key', () => {
+  it('should generate new Secp256K1 key pair, and compute public key from secret key', () => {
     const edKeyPair = casperClient.getKeyPair(SignatureAlgorithm.Secp256K1);
     const publicKey = edKeyPair.publicKey.rawPublicKey;
-    const privateKey = edKeyPair.privateKey;
-    const convertFromPrivateKey = casperClient.privateToPublicKey(
-      privateKey,
+    const secretKey = edKeyPair.secretKey;
+    const convertFromSecretKey = casperClient.getPublicKeyFromSecretKey(
+      secretKey,
       SignatureAlgorithm.Secp256K1
     );
-    expect(convertFromPrivateKey).to.deep.equal(publicKey);
+    expect(convertFromSecretKey).to.deep.equal(publicKey);
   });
 
   it('should generate PEM file for Secp256K1 and restore the key pair from PEM file correctly', () => {
@@ -82,32 +82,32 @@ describe('CasperClient', () => {
       SignatureAlgorithm.Secp256K1
     );
     const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
-    const privateKeyInPem = edKeyPair.exportPrivateKeyInPem();
+    const secretKeyInPem = edKeyPair.exportSecretKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
-    fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
+    fs.writeFileSync(tempDir + '/private.pem', secretKeyInPem);
     const publicKeyFromFIle = casperClient.getPublicKeyFromPEMFile(
       tempDir + '/public.pem',
       SignatureAlgorithm.Secp256K1
     );
-    const privateKeyFromFile = casperClient.getSecretKeyFromPEMFile(
+    const secretKeyFromFile = casperClient.getSecretKeyFromPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Secp256K1
     );
 
     const keyPairFromFile = Keys.Secp256K1.getKeyPairFromBytes(
       publicKeyFromFIle,
-      privateKeyFromFile,
+      secretKeyFromFile,
       'raw'
     );
 
     expect(keyPairFromFile.publicKey.rawPublicKey).to.deep.equal(
       edKeyPair.publicKey.rawPublicKey
     );
-    expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
+    expect(keyPairFromFile.secretKey).to.deep.equal(edKeyPair.secretKey);
 
-    // load the keypair from pem file of private key
+    // load the keypair from pem file of secret key
     const loadedKeyPair = casperClient.getKeyPairFromSecretPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Secp256K1
@@ -115,7 +115,7 @@ describe('CasperClient', () => {
     expect(loadedKeyPair.publicKey.rawPublicKey).to.deep.equal(
       edKeyPair.publicKey.rawPublicKey
     );
-    expect(loadedKeyPair.privateKey).to.deep.equal(edKeyPair.privateKey);
+    expect(loadedKeyPair.secretKey).to.deep.equal(edKeyPair.secretKey);
   });
 
   // todo move it to example once we publish transfer feature

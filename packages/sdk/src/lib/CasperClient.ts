@@ -43,7 +43,7 @@ export class CasperClient {
   }
 
   /**
-   * Load private key from file
+   * Load public key from file
    *
    * @param path the path to the publicKey file
    * @param algo the signature algorithm of the file
@@ -63,8 +63,8 @@ export class CasperClient {
   }
 
   /**
-   * Load private key
-   * @param path the path to the private key file
+   * Load secret key
+   * @param path the path to the secret key file
    */
   public getSecretKeyFromPEMFile(
     path: string,
@@ -81,9 +81,9 @@ export class CasperClient {
   }
 
   /**
-   * Load private key file to restore keyPair
+   * Load secret key file to restore keyPair
    *
-   * @param path The path to the private key
+   * @param path The path to the secret key
    * @param algo
    */
   public getKeyPairFromSecretPEMFile(
@@ -110,18 +110,18 @@ export class CasperClient {
   }
 
   /**
-   * Compute public key from private Key.
-   * @param privateKey
+   * Compute public key from secret Key.
+   * @param secretKey
    */
-  public privateToPublicKey(
-    privateKey: ByteArray,
+  public getPublicKeyFromSecretKey(
+    secretKey: ByteArray,
     algo: SignatureAlgorithm
   ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
-        return Keys.Ed25519.getPublicKeyFromSecretKey(privateKey);
+        return Keys.Ed25519.getPublicKeyFromSecretKey(secretKey);
       case SignatureAlgorithm.Secp256K1:
-        return Keys.Secp256K1.getPublicKeyFromSecretKey(privateKey);
+        return Keys.Secp256K1.getPublicKeyFromSecretKey(secretKey);
       default:
         throw new Error('Invalid signature algorithm');
     }
