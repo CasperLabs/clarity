@@ -98,7 +98,7 @@ if (enableAuth0Metrics) {
 // as if it were an environment variable
 const port = process.env.SERVER_PORT!;
 
-const contractKeys = Keys.Ed25519.parseKeyFiles(
+const contractKeys = Keys.Ed25519.getKeyPairFromFiles(
   process.env.FAUCET_ACCOUNT_PUBLIC_KEY_PATH!,
   process.env.FAUCET_ACCOUNT_PRIVATE_KEY_PATH!
 );

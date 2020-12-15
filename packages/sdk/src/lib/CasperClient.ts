@@ -31,7 +31,7 @@ export class CasperClient {
    * Generate new key pair.
    * @param algo Currently we support Ed25519 and Secp256K1.
    */
-  public newKeyPair(algo: SignatureAlgorithm): AsymmetricKey {
+  public getKeyPair(algo: SignatureAlgorithm): AsymmetricKey {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.new();
@@ -48,15 +48,15 @@ export class CasperClient {
    * @param path the path to the publicKey file
    * @param algo the signature algorithm of the file
    */
-  public loadPublicKeyFromFile(
+  public getPublicKeyFromPEMFile(
     path: string,
     algo: SignatureAlgorithm
   ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
-        return Keys.Ed25519.parsePublicKeyFile(path);
+        return Keys.Ed25519.getPublicKeyFromPEMFile(path);
       case SignatureAlgorithm.Secp256K1:
-        return Keys.Secp256K1.parsePublicKeyFile(path);
+        return Keys.Secp256K1.getPublicKeyFromPEMFile(path);
       default:
         throw new Error('Invalid signature algorithm');
     }
@@ -66,15 +66,15 @@ export class CasperClient {
    * Load private key
    * @param path the path to the private key file
    */
-  public loadPrivateKeyFromFile(
+  public getSecretKeyFromPEMFile(
     path: string,
     algo: SignatureAlgorithm
   ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
-        return Keys.Ed25519.parsePrivateKeyFile(path);
+        return Keys.Ed25519.getSecretKeyFromPEMFile(path);
       case SignatureAlgorithm.Secp256K1:
-        return Keys.Secp256K1.parsePrivateKeyFile(path);
+        return Keys.Secp256K1.getSecretKeyFromPEMFile(path);
       default:
         throw new Error('Invalid signature algorithm');
     }
@@ -86,15 +86,15 @@ export class CasperClient {
    * @param path The path to the private key
    * @param algo
    */
-  public loadKeyPairFromPrivateFile(
+  public getKeyPairFromSecretPEMFile(
     path: string,
     algo: SignatureAlgorithm
   ): AsymmetricKey {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
-        return Keys.Ed25519.loadKeyPairFromPrivateFile(path);
+        return Keys.Ed25519.getKeyPairFromSecretPEMFile(path);
       case SignatureAlgorithm.Secp256K1:
-        return Keys.Secp256K1.loadKeyPairFromPrivateFile(path);
+        return Keys.Secp256K1.getKeyPairFromSecretPEMFile(path);
       default:
         throw new Error('Invalid signature algorithm');
     }
@@ -105,7 +105,7 @@ export class CasperClient {
    *
    * @param seed The seed buffer for parent key
    */
-  public newHdWallet(seed: ByteArray): CasperHDKey {
+  public getWalletFromSeed(seed: ByteArray): CasperHDKey {
     return CasperHDKey.fromMasterSeed(seed);
   }
 
@@ -119,9 +119,9 @@ export class CasperClient {
   ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
-        return Keys.Ed25519.privateToPublicKey(privateKey);
+        return Keys.Ed25519.getPublicKeyFromSecretKey(privateKey);
       case SignatureAlgorithm.Secp256K1:
-        return Keys.Secp256K1.privateToPublicKey(privateKey);
+        return Keys.Secp256K1.getPublicKeyFromSecretKey(privateKey);
       default:
         throw new Error('Invalid signature algorithm');
     }
@@ -163,8 +163,8 @@ export class CasperClient {
    * convert the deploy object to json
    * @param deploy
    */
-  public deployToJson(deploy: Deploy) {
-    return DeployUtil.deployToJson(deploy);
+  public getDeployAsJSON(deploy: Deploy) {
+    return DeployUtil.getDeployAsJSON(deploy);
   }
 
   /**
@@ -185,14 +185,18 @@ export class CasperClient {
   /**
    * Get the balance of public key
    */
-  public async balanceOfByPublicKey(publicKey: PublicKey): Promise<number> {
-    return this.balanceOfByAccountHash(encodeBase16(publicKey.toAccountHash()));
+  public async getBalanceOfByPublicKey(publicKey: PublicKey): Promise<number> {
+    return this.getBalanceOfByAccountHash(
+      encodeBase16(publicKey.toAccountHash())
+    );
   }
 
   /**
    * Get the balance by account hash
    */
-  public async balanceOfByAccountHash(accountHashStr: string): Promise<number> {
+  public async getBalanceOfByAccountHash(
+    accountHashStr: string
+  ): Promise<number> {
     try {
       const stateRootHash = await this.nodeClient
         .getLatestBlockInfo()
@@ -225,7 +229,7 @@ export class CasperClient {
    * @param page
    * @param limit
    */
-  public async getAccountsDeploys(
+  public async getAccountDeploys(
     publicKey: PublicKey,
     page: number = 0,
     limit: number = 20

@@ -23,9 +23,9 @@ describe('Ed25519', () => {
     ]);
     const hash = byteHash(bytes);
 
-    expect(Ed25519.accountHash(signKeyPair.publicKey.rawPublicKey)).deep.equal(
-      hash
-    );
+    expect(
+      Ed25519.getAccountHashFromPublicKey(signKeyPair.publicKey.rawPublicKey)
+    ).deep.equal(hash);
   });
 
   it('should generate PEM file for Ed25519 correctly', () => {
@@ -36,7 +36,7 @@ describe('Ed25519', () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
     fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
-    const signKeyPair2 = Ed25519.parseKeyFiles(
+    const signKeyPair2 = Ed25519.getKeyPairFromFiles(
       tempDir + '/public.pem',
       tempDir + '/private.pem'
     );
@@ -120,7 +120,7 @@ describe('Secp256K1', () => {
     const hash = byteHash(bytes);
 
     expect(
-      Secp256K1.accountHash(signKeyPair.publicKey.rawPublicKey)
+      Secp256K1.getAccountHash(signKeyPair.publicKey.rawPublicKey)
     ).deep.equal(hash);
   });
 
@@ -136,14 +136,14 @@ describe('Secp256K1', () => {
     fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
 
     // expect importing keys from pem files works well
-    expect(Secp256K1.parsePublicKeyFile(tempDir + '/public.pem')).to.deep.eq(
-      signKeyPair.publicKey.rawPublicKey
-    );
-    expect(Secp256K1.parsePrivateKeyFile(tempDir + '/private.pem')).to.deep.eq(
-      signKeyPair.privateKey
-    );
+    expect(
+      Secp256K1.getPublicKeyFromPEMFile(tempDir + '/public.pem')
+    ).to.deep.eq(signKeyPair.publicKey.rawPublicKey);
+    expect(
+      Secp256K1.getSecretKeyFromPEMFile(tempDir + '/private.pem')
+    ).to.deep.eq(signKeyPair.privateKey);
 
-    const signKeyPair2 = Secp256K1.parseKeyFiles(
+    const signKeyPair2 = Secp256K1.getKeyPairFromFiles(
       tempDir + '/public.pem',
       tempDir + '/private.pem'
     );

@@ -68,7 +68,7 @@ export class StoredFaucetService {
       }
       const globalStateHash = LFB.header!.state_root_hash!;
 
-      const accountHash = this.contractKeys.accountHash();
+      const accountHash = this.contractKeys.getAccountHash();
       const key = 'account-hash-' + encodeBase16(accountHash);
       const state = await this.casperService.getBlockState(
         globalStateHash,

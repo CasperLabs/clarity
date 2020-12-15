@@ -1,6 +1,6 @@
 import Client, { HTTPTransport, RequestManager } from 'rpc-client-js';
 import { DeployUtil, encodeBase16, PublicKey } from '..';
-import { deployToJson } from '../lib/DeployUtil';
+import { getDeployAsJSON } from '../lib/DeployUtil';
 
 interface RpcResult {
   api_version: string;
@@ -283,7 +283,7 @@ export class CasperServiceByJsonRPC {
   public async deploy(signedDeploy: DeployUtil.Deploy) {
     return await this.client.request({
       method: 'account_put_deploy',
-      params: deployToJson(signedDeploy)
+      params: getDeployAsJSON(signedDeploy)
     });
   }
 }

@@ -18,7 +18,7 @@ describe('CasperClient', () => {
   });
 
   it('should generate new Ed25519 key pair, and compute public key from private key', () => {
-    const edKeyPair = casperClient.newKeyPair(SignatureAlgorithm.Ed25519);
+    const edKeyPair = casperClient.getKeyPair(SignatureAlgorithm.Ed25519);
     const publicKey = edKeyPair.publicKey.rawPublicKey;
     const privateKey = edKeyPair.privateKey;
     const convertFromPrivateKey = casperClient.privateToPublicKey(
@@ -29,23 +29,23 @@ describe('CasperClient', () => {
   });
 
   it('should generate PEM file for Ed25519 correctly', () => {
-    const edKeyPair = casperClient.newKeyPair(SignatureAlgorithm.Ed25519);
+    const edKeyPair = casperClient.getKeyPair(SignatureAlgorithm.Ed25519);
     const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
     const privateKeyInPem = edKeyPair.exportPrivateKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
     fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
-    const publicKeyFromFIle = casperClient.loadPublicKeyFromFile(
+    const publicKeyFromFIle = casperClient.getPublicKeyFromPEMFile(
       tempDir + '/public.pem',
       SignatureAlgorithm.Ed25519
     );
-    const privateKeyFromFile = casperClient.loadPrivateKeyFromFile(
+    const privateKeyFromFile = casperClient.getSecretKeyFromPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Ed25519
     );
 
-    const keyPairFromFile = Keys.Ed25519.parseKeyPair(
+    const keyPairFromFile = Keys.Ed25519.getKeyPairFromBytes(
       publicKeyFromFIle,
       privateKeyFromFile
     );
@@ -56,7 +56,7 @@ describe('CasperClient', () => {
     expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
 
     // load the keypair from pem file of private key
-    const loadedKeyPair = casperClient.loadKeyPairFromPrivateFile(
+    const loadedKeyPair = casperClient.getKeyPairFromSecretPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Ed25519
     );
@@ -67,7 +67,7 @@ describe('CasperClient', () => {
   });
 
   it('should generate new Secp256K1 key pair, and compute public key from private key', () => {
-    const edKeyPair = casperClient.newKeyPair(SignatureAlgorithm.Secp256K1);
+    const edKeyPair = casperClient.getKeyPair(SignatureAlgorithm.Secp256K1);
     const publicKey = edKeyPair.publicKey.rawPublicKey;
     const privateKey = edKeyPair.privateKey;
     const convertFromPrivateKey = casperClient.privateToPublicKey(
@@ -78,7 +78,7 @@ describe('CasperClient', () => {
   });
 
   it('should generate PEM file for Secp256K1 and restore the key pair from PEM file correctly', () => {
-    const edKeyPair: Secp256K1 = casperClient.newKeyPair(
+    const edKeyPair: Secp256K1 = casperClient.getKeyPair(
       SignatureAlgorithm.Secp256K1
     );
     const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
@@ -87,16 +87,16 @@ describe('CasperClient', () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
     fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
-    const publicKeyFromFIle = casperClient.loadPublicKeyFromFile(
+    const publicKeyFromFIle = casperClient.getPublicKeyFromPEMFile(
       tempDir + '/public.pem',
       SignatureAlgorithm.Secp256K1
     );
-    const privateKeyFromFile = casperClient.loadPrivateKeyFromFile(
+    const privateKeyFromFile = casperClient.getSecretKeyFromPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Secp256K1
     );
 
-    const keyPairFromFile = Keys.Secp256K1.parseKeyPair(
+    const keyPairFromFile = Keys.Secp256K1.getKeyPairFromBytes(
       publicKeyFromFIle,
       privateKeyFromFile,
       'raw'
@@ -108,7 +108,7 @@ describe('CasperClient', () => {
     expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
 
     // load the keypair from pem file of private key
-    const loadedKeyPair = casperClient.loadKeyPairFromPrivateFile(
+    const loadedKeyPair = casperClient.getKeyPairFromSecretPEMFile(
       tempDir + '/private.pem',
       SignatureAlgorithm.Secp256K1
     );
@@ -126,7 +126,7 @@ describe('CasperClient', () => {
         '01a72eb5ba13e243d40e56b0547536e3ad1584eee5a386c7be5d5a1f94c09a6592'
       )
     );
-    const keyPair = Ed25519.parseKeyFiles(
+    const keyPair = Ed25519.getKeyPairFromFiles(
       '../server/test.public.key',
       '../server/test.private.key'
     );
@@ -143,7 +143,7 @@ describe('CasperClient', () => {
   it('should create a HK wallet and derive child account correctly', function () {
     const seed =
       'fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542';
-    const hdKey = casperClient.newHdWallet(decodeBase16(seed));
+    const hdKey = casperClient.getWalletFromSeed(decodeBase16(seed));
     const secpKey1 = hdKey.deriveIndex(1);
     const msg = Buffer.from('hello world');
     const signature = secpKey1.sign(msg);

@@ -23,7 +23,7 @@ import { AsymmetricKey } from 'casper-client-sdk/dist/lib/Keys';
 type AccountB64 = string;
 
 export const accountHashForEd25519 = (publicKeyBase64: string) => {
-  return Keys.Ed25519.accountHex(decodeBase64(publicKeyBase64));
+  return Keys.Ed25519.getAccountHex(decodeBase64(publicKeyBase64));
 };
 
 export const getPublicKeyHashBase64 = (account: UserAccount) => {
