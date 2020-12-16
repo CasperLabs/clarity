@@ -69,8 +69,8 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
             <TextArea disabled={true} label={'Public Key'}>
               {newAccountForm.getKeys.exportPublicKeyInPem()}
             </TextArea>
-            <TextArea disabled={true} label={'Private Key'}>
-              {newAccountForm.getKeys.exportPrivateKeyInPem()}
+            <TextArea disabled={true} label={'Secret Key'}>
+              {newAccountForm.getKeys.exportSecretKeyInPem()}
             </TextArea>
           </Form>
         </Modal>

@@ -480,8 +480,8 @@ export const signDeploy = (
 ): Deploy => {
   const approval = new Approval();
   const signature = signingKey.sign(deploy.hash);
-  approval.signer = signingKey.accountHex();
-  approval.signature = Keys.Ed25519.accountHex(signature);
+  approval.signer = signingKey.getAccountHex();
+  approval.signature = Keys.Ed25519.getAccountHex(signature);
   deploy.approvals.push(approval);
 
   return deploy;
@@ -524,7 +524,7 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
  *
  * @param deploy
  */
-export const deployToJson = (deploy: Deploy) => {
+export const getDeployAsJSON = (deploy: Deploy) => {
   const header = deploy.header;
   const headerJson = {
     account: header.account.toAccountHex(),

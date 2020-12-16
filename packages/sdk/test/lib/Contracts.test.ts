@@ -31,9 +31,9 @@ describe('sign', () => {
       'MC4CAQAwBQYDK2VwBCIEIEIcqHCVzuejJfD9wCoGVOLc3YFNUa9dcsy+mv5j2sar';
     const publicKey = decodeBase64(publicKeyBase64);
     const privateKey = decodeBase64(privateKeyBase64);
-    const keyPair = Ed25519.parseKeyPair(publicKey, privateKey);
+    const keyPair = Ed25519.getKeyPairFromBytes(publicKey, privateKey);
 
-    const signature = nacl.sign_detached(input, keyPair.privateKey);
+    const signature = nacl.sign_detached(input, keyPair.secretKey);
 
     const signatureHex = Buffer.from(signature).toString('hex');
     const expectedHex =

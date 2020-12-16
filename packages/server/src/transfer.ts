@@ -28,14 +28,14 @@ for (const opt of optionDefinitions) {
   }
 }
 
-const contractKeys = Keys.Ed25519.parseKeyFiles(
+const contractKeys = Keys.Ed25519.getKeyPairFromFiles(
   options['from-public-key-path'],
   options['from-private-key-path']
 );
 
 const hex = (x: ByteArray) => Buffer.from(x).toString('hex');
 
-const accountPublicKey = Keys.Ed25519.parsePublicKeyFile(
+const accountPublicKey = Keys.Ed25519.getPublicKeyFromPEMFile(
   options['to-public-key-path']
 );
 const accountPublicKeyBase16 = hex(accountPublicKey);

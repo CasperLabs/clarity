@@ -15,7 +15,6 @@ import {
 } from 'casper-client-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
-import { AsymmetricKey } from 'casper-client-sdk/dist/lib/Keys';
 
 // https://www.npmjs.com/package/tweetnacl-ts#signatures
 // https://tweetnacl.js.org/#/sign
@@ -23,7 +22,7 @@ import { AsymmetricKey } from 'casper-client-sdk/dist/lib/Keys';
 type AccountB64 = string;
 
 export const accountHashForEd25519 = (publicKeyBase64: string) => {
-  return Keys.Ed25519.accountHex(decodeBase64(publicKeyBase64));
+  return Keys.Ed25519.getAccountHex(decodeBase64(publicKeyBase64));
 };
 
 export const getPublicKeyHashBase64 = (account: UserAccount) => {
@@ -175,7 +174,7 @@ export class AuthContainer {
     if (form instanceof NewAccountFormData && form.clean()) {
       // Save the private and public keys to disk.
       saveToFile(
-        form.getKeys.exportPrivateKeyInPem(),
+        form.getKeys.exportSecretKeyInPem(),
         `${form.name.$}_secret_key.pem`
       );
       saveToFile(
@@ -297,17 +296,17 @@ class AccountFormData extends CleanableFormData {
 }
 
 export class NewAccountFormData extends AccountFormData {
-  @observable privateKeyBase64: string = '';
-  private keys: AsymmetricKey;
+  @observable secretKeyBase64: string = '';
+  private keys: Keys.AsymmetricKey;
 
   constructor(accounts: UserAccount[]) {
     super(accounts);
-    // Generate key pair and assign to public and private keys.
+    // Generate key pair and assign to public and secret keys.
     this.keys = Keys.Ed25519.new();
     this.publicKeyBase64 = new FieldState<string>(
       encodeBase64(this.keys.publicKey.rawPublicKey)
     );
-    this.privateKeyBase64 = encodeBase64(this.keys.privateKey);
+    this.secretKeyBase64 = encodeBase64(this.keys.secretKey);
   }
 
   get getKeys() {
