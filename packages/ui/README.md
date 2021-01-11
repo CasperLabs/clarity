@@ -17,7 +17,7 @@ npx create-react-app ui --typescript
 
 In the project directory, you can run:
 
-### `yarn start`
+### `yarn run dev`
 
 Runs the app in the development mode.<br> Open [http://localhost:8000](http://localhost:8000) to view it in the browser. You can change the port in the `.env` file or by setting the `PORT` env var.
 
@@ -25,7 +25,7 @@ The page will reload if you make edits.<br> You will also see any lint errors in
 
 If we add `"proxy": "http://localhost:8001/"` to `package.json` we get transparent proxying to the server, but it seems to clash with auto-reloading in Firefox; works in Chrome.
 
-To change the code in the `sdk` and see the effect you can run `npm run ~build` in that directory and reload the page.
+To change the code in the `sdk` and see the effect you can run `yarn run build` in that directory and reload the page.
 
 ### `yarn test`
 
