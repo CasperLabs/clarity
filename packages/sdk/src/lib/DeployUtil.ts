@@ -5,7 +5,6 @@
  */
 import { concat } from '@ethersproject/bytes';
 import blake from 'blakejs';
-import { Option } from './option';
 import { decodeBase16, encodeBase16 } from './Conversions';
 import humanizeDuration from 'humanize-duration';
 import {
@@ -14,7 +13,8 @@ import {
   CLValue,
   PublicKey,
   ToBytes,
-  U32
+  U32,
+  Option
 } from './CLValue';
 import {
   toBytesArrayU8,

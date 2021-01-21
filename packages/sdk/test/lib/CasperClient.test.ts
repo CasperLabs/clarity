@@ -120,7 +120,7 @@ describe('CasperClient', () => {
 
   // todo move it to example once we publish transfer feature
   describe.skip('transfer', async () => {
-    const transfer = new DeployUtil.Transfer(
+    const transfer = DeployUtil.ExecutableDeployItem.newTransfer(
       100000000000000,
       PublicKey.fromHex(
         '01a72eb5ba13e243d40e56b0547536e3ad1584eee5a386c7be5d5a1f94c09a6592'
