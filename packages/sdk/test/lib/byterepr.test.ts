@@ -6,9 +6,9 @@ import {
   decodeBase16,
   I32,
   I64,
-  Option,
   List,
   MapValue,
+  Option,
   StringValue,
   Tuple1,
   Tuple2,
@@ -22,9 +22,9 @@ import {
 import {
   AccessRights,
   CLValue,
+  Keys,
   KeyValue,
   PublicKey,
-  Keys,
   URef
 } from '../../src/lib';
 import {
@@ -132,6 +132,8 @@ describe(`numbers' toBytes`, () => {
   });
 
   it('should be able to serialize/deserialize u128', () => {
+    expect(toBytesU128(0)).to.deep.eq(Uint8Array.from([0]));
+
     let bytesU128 = toBytesU128(100000);
     expect(bytesU128).to.deep.eq(Uint8Array.from([3, 160, 134, 1]));
     expect(U128.fromBytes(bytesU128).value.toBytes()).to.deep.equal(
@@ -156,22 +158,9 @@ describe(`numbers' toBytes`, () => {
   it('should be able to serialize/deserialize utf8 string', () => {
     const bytesString = toBytesString('test_测试');
     expect(bytesString).to.deep.eq(
+      // prettier-ignore
       Uint8Array.from([
-        11,
-        0,
-        0,
-        0,
-        116,
-        101,
-        115,
-        116,
-        95,
-        230,
-        181,
-        139,
-        232,
-        175,
-        149
+        11, 0, 0, 0, 116, 101, 115, 116, 95, 230, 181, 139, 232, 175, 149
       ])
     );
     expect(StringValue.fromBytes(bytesString).value.toBytes()).to.deep.equal(
@@ -212,41 +201,10 @@ describe(`numbers' toBytes`, () => {
       )
     ).toBytes();
     expect(bytes2).to.deep.eq(
+      // prettier-ignore
       Uint8Array.from([
-        2,
-        217,
-        61,
-        254,
-        223,
-        193,
-        49,
-        128,
-        160,
-        234,
-        24,
-        136,
-        65,
-        230,
-        78,
-        10,
-        26,
-        247,
-        24,
-        167,
-        51,
-        33,
-        110,
-        127,
-        174,
-        73,
-        9,
-        223,
-        172,
-        227,
-        114,
-        210,
-        176,
-        7
+        2, 217, 61, 254, 223, 193, 49, 128, 160, 234, 24, 136, 65, 230, 78, 10, 26,
+        247, 24, 167, 51, 33, 110, 127, 174, 73, 9, 223, 172, 227, 114, 210, 176, 7
       ])
     );
 
@@ -287,39 +245,10 @@ describe(`numbers' toBytes`, () => {
     );
     const bytes = toBytesDeployHash(deployHash);
     expect(bytes).to.deep.eq(
+      // prettier-ignore
       Uint8Array.from([
-        126,
-        131,
-        190,
-        142,
-        183,
-        131,
-        212,
-        99,
-        28,
-        50,
-        57,
-        238,
-        224,
-        142,
-        149,
-        243,
-        51,
-        150,
-        33,
-        14,
-        35,
-        137,
-        49,
-        85,
-        182,
-        251,
-        115,
-        78,
-        155,
-        127,
-        13,
-        247
+        126, 131, 190, 142, 183, 131, 212, 99, 28, 50, 57, 238, 224, 142, 149, 243,
+        51, 150, 33, 14, 35, 137, 49, 85, 182, 251, 115, 78, 155, 127, 13, 247
       ])
     );
   });
@@ -450,7 +379,7 @@ describe(`numbers' toBytes`, () => {
       }
     ]);
     // prettier-ignore
-    const expectBytes = Uint8Array.from([2, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 49, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 50, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
+    const expectBytes = Uint8Array.from([2, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 49, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 50, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0]);
 
     expect(map.toBytes()).to.deep.eq(expectBytes);
 
@@ -484,48 +413,11 @@ describe(`numbers' toBytes`, () => {
     const byteArray = Uint8Array.from(Array(32).fill(42));
     const bytes = CLValue.byteArray(byteArray).toBytes();
     expect(bytes).to.deep.eq(
+      // prettier-ignore
       Uint8Array.from([
-        32,
-        0,
-        0,
-        0,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        15,
-        32,
-        0,
-        0,
-        0
+        32, 0, 0, 0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+        42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 15,
+        32, 0, 0, 0
       ])
     );
   });
@@ -534,40 +426,10 @@ describe(`numbers' toBytes`, () => {
     const publicKey = Uint8Array.from(Array(32).fill(42));
     const bytes = PublicKey.fromEd25519(publicKey).toBytes();
     expect(bytes).to.deep.eq(
+      // prettier-ignore
       Uint8Array.from([
-        1,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42,
-        42
+        1, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+        42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42
       ])
     );
   });

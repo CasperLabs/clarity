@@ -156,7 +156,7 @@ export class EraInfoJson {
 @jsonObject
 export class StoredValue {
   // StoredVale
-  @jsonMember({ constructor: CLValue })
+  // @jsonMember({ constructor: CLValue })
   public CLValue?: CLValue;
   // An account
   @jsonMember({ constructor: AccountJson })

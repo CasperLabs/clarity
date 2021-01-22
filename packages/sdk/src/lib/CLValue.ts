@@ -318,6 +318,40 @@ export class I64 extends NumberCoder {
   }
 }
 
+const fromBytesBigInt: (
+  bytes: ByteArray,
+  bitSize: number
+) => Result<U128 | U256 | U512> = (bytes: ByteArray, bitSize: number) => {
+  const byteSize = bitSize / 8;
+  if (bytes.length < 1) {
+    return Result.Err(FromBytesError.EarlyEndOfStream);
+  }
+  const tmp = Uint8Array.from(bytes);
+  const n = tmp[0];
+  if (n > byteSize) {
+    return Result.Err(FromBytesError.FormattingError);
+  }
+  if (n + 1 > bytes.length) {
+    return Result.Err(FromBytesError.EarlyEndOfStream);
+  }
+  let bigIntBytes;
+  if (n == 0) {
+    bigIntBytes = [0];
+  } else {
+    bigIntBytes = tmp.subarray(1, 1 + n);
+  }
+  const rem = tmp.subarray(1 + n);
+  if (bitSize === 128) {
+    return Result.Ok(new U128(BigNumber.from(bigIntBytes.reverse())), rem);
+  } else if (bitSize === 256) {
+    return Result.Ok(new U256(BigNumber.from(bigIntBytes.reverse())), rem);
+  } else if (bitSize === 512) {
+    return Result.Ok(new U512(BigNumber.from(bigIntBytes.reverse())), rem);
+  } else {
+    return Result.Err(FromBytesError.FormattingError);
+  }
+};
+
 @staticImplements<BytesDeserializableStatic<U128>>()
 export class U128 extends NumberCoder {
   constructor(n: BigNumberish) {
@@ -329,20 +363,7 @@ export class U128 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U128> {
-    if (bytes.length < 1) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const tmp = Uint8Array.from(bytes);
-    const n = tmp[0];
-    if (n === 0 || n > 16) {
-      return Result.Err(FromBytesError.FormattingError);
-    }
-    if (n + 1 > bytes.length) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const u128Bytes = tmp.subarray(1, 1 + n);
-    const rem = tmp.subarray(1 + n);
-    return Result.Ok(new U128(BigNumber.from(u128Bytes.reverse())), rem);
+    return fromBytesBigInt(bytes, 128);
   }
 }
 
@@ -357,20 +378,7 @@ class U256 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U128> {
-    if (bytes.length < 1) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const tmp = Uint8Array.from(bytes);
-    const n = tmp[0];
-    if (n === 0 || n > 32) {
-      return Result.Err(FromBytesError.FormattingError);
-    }
-    if (n + 1 > bytes.length) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const u256Bytes = tmp.subarray(1, 1 + n);
-    const rem = tmp.subarray(1 + n);
-    return Result.Ok(new U256(BigNumber.from(u256Bytes.reverse())), rem);
+    return fromBytesBigInt(bytes, 256);
   }
 }
 
@@ -385,20 +393,7 @@ export class U512 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U512> {
-    if (bytes.length < 1) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const tmp = Uint8Array.from(bytes);
-    const n = tmp[0];
-    if (n === 0 || n > 64) {
-      return Result.Err(FromBytesError.FormattingError);
-    }
-    if (n + 1 > bytes.length) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const u512Bytes = tmp.subarray(1, 1 + n);
-    const rem = tmp.subarray(1 + n);
-    return Result.Ok(new U512(BigNumber.from(u512Bytes.reverse())), rem);
+    return fromBytesBigInt(bytes, 512);
   }
 }
 
@@ -1496,29 +1491,38 @@ export class CLValue implements ToBytes {
   public bytes: string;
 
   @jsonMember({
-    name: 'parsed_to_json',
+    name: 'parsed',
     deserializer: v => v,
-    preserveNull: true
+    preserveNull: false,
+    serializer: () => null
   })
-  public parsedToJson: any;
+  public parsed?: any;
 
   private value: CLTypedAndToBytes;
 
   /**
    * Please use static methodsto constructs a new `CLValue`
    */
-  private constructor(value: CLTypedAndToBytes, clType: CLType) {
-    this.value = value;
-    this.clType = clType;
-    this.bytes = encodeBase16(this.value.toBytes());
+  public static newCLValue(value: CLTypedAndToBytes, clType: CLType) {
+    const clValue = new CLValue();
+    clValue.value = value;
+    clValue.clType = clType;
+    clValue.bytes = encodeBase16(value.toBytes());
+    return clValue;
   }
+
+  // private constructor(value: CLTypedAndToBytes, clType: CLType) {
+  //   this.value = value;
+  //   this.clType = clType;
+  //   this.bytes = encodeBase16(this.value.toBytes());
+  // }
 
   public get clValueBytes() {
     return this.value.toBytes();
   }
 
   public static fromT<T extends CLTypedAndToBytes>(v: T) {
-    return new CLValue(v, v.clType());
+    return CLValue.newCLValue(v, v.clType());
   }
 
   /**
@@ -1541,7 +1545,7 @@ export class CLValue implements ToBytes {
       return Result.Err(clTypeRes.error);
     }
     const v = fromBytesByCLType(clTypeRes.value, bytesRes.value.rawBytes);
-    const clValue = new CLValue(v.value, clTypeRes.value);
+    const clValue = CLValue.newCLValue(v.value, clTypeRes.value);
     return Result.Ok(clValue, clTypeRes.remainder);
   }
 
@@ -1609,7 +1613,7 @@ export class CLValue implements ToBytes {
     const v = CLTypedAndToBytesHelper.list(
       strings.map(s => CLTypedAndToBytesHelper.string(s))
     );
-    return new CLValue(v, CLTypeHelper.list(SimpleType.String));
+    return CLValue.newCLValue(v, CLTypeHelper.list(SimpleType.String));
   };
 
   public static list<T extends CLTypedAndToBytes>(vec: T[]) {

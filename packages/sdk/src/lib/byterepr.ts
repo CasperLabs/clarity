@@ -34,7 +34,17 @@ export const toBytesNumber = (
     // for positive number, we had to deal with paddings
     if (bitSize > 64) {
       // for u128, u256, u512, we have to and append extra byte for length
-      return concat([bytes, Uint8Array.from([bytes.length])]).reverse();
+      let i = bytes.findIndex(b => b !== 0);
+      let bytesRemovePadding;
+      if (i == -1) {
+        bytesRemovePadding = Uint8Array.from([]);
+      } else {
+        bytesRemovePadding = bytes.subarray(i);
+      }
+      return concat([
+        bytesRemovePadding,
+        Uint8Array.from([bytesRemovePadding.length])
+      ]).reverse();
     } else {
       // for other types, we have to add padding 0s
       const byteLength = bitSize / 8;
