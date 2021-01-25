@@ -133,11 +133,8 @@ describe('CasperClient', () => {
       DeployUtil.standardPayment(JSBI.BigInt(100000000000000))
     );
     const signedDeploy = casperClient.signDeploy(deploy, keyPair);
-    console.log(signedDeploy);
     const json = casperClient.deployToJson(signedDeploy);
-    console.log(json);
     const revertDeploy = casperClient.deployFromJson(json);
-    console.log(revertDeploy);
     const json2 = casperClient.deployToJson(revertDeploy!);
     expect(json2).to.deep.eq(json);
   });
