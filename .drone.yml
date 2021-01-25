@@ -120,10 +120,10 @@ depends_on:
 ---
 kind: pipeline
 type: docker
-name: npm publish
+name: npm-publish-by-tag
 
 steps:
-- name: npm publish
+- name: npm-publish
   image: "casperlabs/clarity-build:latest"
   environment:
     NPM_TOKEN:
@@ -138,7 +138,34 @@ steps:
     - "npm publish --verbose"
 
 trigger:
-  event:
-  - tag
+  ref:
+    - refs/tags/sdk*
 
+---
+kind: pipeline
+type: docker
+name: failed-publish-by-tag
 
+clone:
+  disable: true
+
+steps:
+  - name: notify
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      template:
+        - |
+          clarity build status: *{{ uppercasefirst build.status }}*
+          Author: {{ build.author }}
+          Drone Build: <{{ build.link }}|#{{ build.number }}>
+          Commit Link: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{ truncate build.commit 10 }}>
+trigger:
+  status:
+    - failure
+  ref:
+    - refs/tags/sdk*
+
+depends_on:
+  - npm-publish-by-tag
