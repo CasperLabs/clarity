@@ -335,7 +335,7 @@ const fromBytesBigInt: (
     return Result.Err(FromBytesError.EarlyEndOfStream);
   }
   let bigIntBytes;
-  if (n == 0) {
+  if (n === 0) {
     bigIntBytes = [0];
   } else {
     bigIntBytes = tmp.subarray(1, 1 + n);
@@ -901,7 +901,7 @@ class Tuple1Type implements ToJSON {
   public toJSON(): any {
     const t0TypeInJSON = clTypeToJSON(this.t0);
     return {
-      [Tuple1Type.TypeId]: t0TypeInJSON
+      [Tuple1Type.TypeId]: [t0TypeInJSON]
     };
   }
 }
@@ -1414,18 +1414,10 @@ function jsonToSimpleType(str: string): CLType {
 }
 
 const clTypeToJSON = (type: CLType) => {
-  if (
-    type instanceof ListType ||
-    type instanceof Tuple1Type ||
-    type instanceof Tuple2Type ||
-    type instanceof Tuple3Type ||
-    type instanceof ByteArrayType ||
-    type instanceof MapType ||
-    type instanceof OptionType
-  ) {
-    return type.toJSON();
+  if (typeof type === typeof 0) {
+    return toJSONSimpleType(type as SimpleType);
   } else {
-    return toJSONSimpleType(type);
+    return (type as ToJSON).toJSON();
   }
 };
 
@@ -1445,7 +1437,7 @@ const jsonToCLType = (json: any): CLType => {
       const t1Type = jsonToCLType(innerTypes[1]);
       return CLTypeHelper.tuple2(t0Type, t1Type);
     } else if (Tuple3Type.TypeId in json) {
-      const innerTypes = json[Tuple2Type.TypeId];
+      const innerTypes = json[Tuple3Type.TypeId];
       const t0Type = jsonToCLType(innerTypes[0]);
       const t1Type = jsonToCLType(innerTypes[1]);
       const t2Type = jsonToCLType(innerTypes[2]);
@@ -1510,12 +1502,6 @@ export class CLValue implements ToBytes {
     clValue.bytes = encodeBase16(value.toBytes());
     return clValue;
   }
-
-  // private constructor(value: CLTypedAndToBytes, clType: CLType) {
-  //   this.value = value;
-  //   this.clType = clType;
-  //   this.bytes = encodeBase16(this.value.toBytes());
-  // }
 
   public get clValueBytes() {
     return this.value.toBytes();
@@ -1624,11 +1610,15 @@ export class CLValue implements ToBytes {
     return CLValue.fromT(new Tuple1(t0));
   }
 
-  public static tuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
+  public static tuple2(t0: CLTypedAndToBytes, t1: CLTypedAndToBytes) {
     return CLValue.fromT(new Tuple2(t0, t1));
   }
 
-  public static tuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
+  public static tuple3(
+    t0: CLTypedAndToBytes,
+    t1: CLTypedAndToBytes,
+    t2: CLTypedAndToBytes
+  ) {
     return CLValue.fromT(new Tuple3(t0, t1, t2));
   }
 

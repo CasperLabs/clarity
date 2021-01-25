@@ -34,9 +34,9 @@ export const toBytesNumber = (
     // for positive number, we had to deal with paddings
     if (bitSize > 64) {
       // for u128, u256, u512, we have to and append extra byte for length
-      let i = bytes.findIndex(b => b !== 0);
+      const i = bytes.findIndex(b => b !== 0);
       let bytesRemovePadding;
-      if (i == -1) {
+      if (i === -1) {
         bytesRemovePadding = Uint8Array.from([]);
       } else {
         bytesRemovePadding = bytes.subarray(i);

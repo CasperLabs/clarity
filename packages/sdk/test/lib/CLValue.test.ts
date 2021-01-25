@@ -1,5 +1,11 @@
 import { expect } from 'chai';
-import { AccountHash, CLValue, KeyValue, URef } from '../../src';
+import {
+  AccountHash,
+  CLTypedAndToBytesHelper,
+  CLValue,
+  KeyValue,
+  URef
+} from '../../src';
 import { TypedJSON } from 'typedjson';
 import { BigNumber } from '@ethersproject/bignumber';
 
@@ -205,87 +211,63 @@ describe('CLValue', () => {
         '060606060606060606060606060606060606060606060606060606060606060607'
     });
   });
-  //
-  // it('should serialize/deserialize Tuple1 correctly', () => {
-  //   const value1 = CLTypedAndToBytesHelper.string('hello');
-  //   const tuple = CLTypedAndToBytesHelper.tuple1(value1);
-  //   // prettier-ignore
-  //   const expectedBytes = Uint8Array.from([5, 0, 0, 0, 104, 101, 108, 108, 111]);
-  //   expect(tuple.toBytes()).to.deep.equal(expectedBytes);
-  //
-  //   expect(
-  //     Tuple1.fromBytes(
-  //       CLTypeHelper.tuple1(CLTypeHelper.string()),
-  //       expectedBytes
-  //     ).value.clType()
-  //   ).to.deep.equal(tuple.clType());
-  //
-  //   expect(
-  //     Tuple1.fromBytes(
-  //       CLTypeHelper.tuple1(CLTypeHelper.string()),
-  //       expectedBytes
-  //     ).value.toBytes()
-  //   ).to.deep.equal(tuple.toBytes());
-  // });
-  //
-  // it('should serialize/deserialize Tuple2 correctly', () => {
-  //   const value1 = CLTypedAndToBytesHelper.string('hello');
-  //   const value2 = CLTypedAndToBytesHelper.u64(123456);
-  //   const tuple2 = CLTypedAndToBytesHelper.tuple2(value1, value2);
-  //   // prettier-ignore
-  //   const expectedBytes = Uint8Array.from(
-  //     [5, 0, 0, 0, 104, 101, 108, 108, 111, 64, 226, 1, 0, 0, 0, 0, 0]);
-  //   expect(tuple2.toBytes()).to.deep.equal(expectedBytes);
-  //
-  //   expect(
-  //     Tuple2.fromBytes(
-  //       CLTypeHelper.tuple2(CLTypeHelper.string(), CLTypeHelper.u64()),
-  //       expectedBytes
-  //     ).value.clType()
-  //   ).to.deep.equal(tuple2.clType());
-  //
-  //   expect(
-  //     Tuple2.fromBytes(
-  //       CLTypeHelper.tuple2(CLTypeHelper.string(), CLTypeHelper.u64()),
-  //       expectedBytes
-  //     ).value.toBytes()
-  //   ).to.deep.equal(tuple2.toBytes());
-  // });
-  //
-  // it('should serialize/deserialize Tuple3 correctly', () => {
-  //   const value1 = CLTypedAndToBytesHelper.string('hello');
-  //   const value2 = CLTypedAndToBytesHelper.u64(123456);
-  //   const value3 = CLTypedAndToBytesHelper.bool(true);
-  //   const tuple3 = CLTypedAndToBytesHelper.tuple3(value1, value2, value3);
-  //   // prettier-ignore
-  //   const expectedBytes = Uint8Array.from(
-  //     [5, 0, 0, 0, 104, 101, 108, 108, 111, 64, 226, 1, 0, 0, 0, 0, 0, 1]
-  //   );
-  //   expect(tuple3.toBytes()).to.deep.equal(expectedBytes);
-  //
-  //   expect(
-  //     Tuple3.fromBytes(
-  //       CLTypeHelper.tuple3(
-  //         CLTypeHelper.string(),
-  //         CLTypeHelper.u64(),
-  //         CLTypeHelper.bool()
-  //       ),
-  //       expectedBytes
-  //     ).value.clType()
-  //   ).to.deep.equal(tuple3.clType());
-  //
-  //   expect(
-  //     Tuple3.fromBytes(
-  //       CLTypeHelper.tuple3(
-  //         CLTypeHelper.string(),
-  //         CLTypeHelper.u64(),
-  //         CLTypeHelper.bool()
-  //       ),
-  //       expectedBytes
-  //     ).value.toBytes()
-  //   ).to.deep.equal(tuple3.toBytes());
-  // });
-  //
+
+  it('should serialize/deserialize Tuple1 correctly', () => {
+    const tuple1 = CLValue.tuple1(CLTypedAndToBytesHelper.bool(true));
+    jsonRoundTrip(tuple1, { cl_type: { Tuple1: ['Bool'] }, bytes: '01' });
+
+    const tuple2 = CLValue.tuple1(
+      CLTypedAndToBytesHelper.tuple1(CLTypedAndToBytesHelper.bool(true))
+    );
+    jsonRoundTrip(tuple2, {
+      cl_type: { Tuple1: [{ Tuple1: ['Bool'] }] },
+      bytes: '01'
+    });
+  });
+
+  it('should serialize/deserialize Tuple2 correctly', () => {
+    const innerTuple1 = CLTypedAndToBytesHelper.tuple1(
+      CLTypedAndToBytesHelper.bool(true)
+    );
+    const tuple2 = CLValue.tuple2(
+      CLTypedAndToBytesHelper.u128(128),
+      innerTuple1
+    );
+    jsonRoundTrip(tuple2, {
+      cl_type: { Tuple2: ['U128', { Tuple1: ['Bool'] }] },
+      bytes: '018001'
+    });
+  });
+
+  it('should serialize/deserialize Tuple3 correctly', () => {
+    const value1 = CLTypedAndToBytesHelper.string('hello');
+    const value2 = CLTypedAndToBytesHelper.u64(123456);
+    const value3 = CLTypedAndToBytesHelper.bool(true);
+    const tuple3 = CLTypedAndToBytesHelper.tuple3(value1, value2, value3);
+    jsonRoundTrip(CLValue.fromT(tuple3), {
+      cl_type: { Tuple3: ['String', 'U64', 'Bool'] },
+      bytes: '0500000068656c6c6f40e201000000000001'
+    });
+
+    const composedTuple3 = CLTypedAndToBytesHelper.tuple3(
+      tuple3,
+      tuple3,
+      tuple3
+    );
+
+    jsonRoundTrip(CLValue.fromT(composedTuple3), {
+      cl_type: {
+        Tuple3: [
+          { Tuple3: ['String', 'U64', 'Bool'] },
+          { Tuple3: ['String', 'U64', 'Bool'] },
+          { Tuple3: ['String', 'U64', 'Bool'] }
+        ]
+      },
+      bytes:
+        '0500000068656c6c6f40e2010000000000010500000068656c6c6f40e2010000000000010500000068656c6c6f40e201000000000001'
+    });
+  });
+
   // it('should serialize/deserialize List correctly', () => {
   //   const list = CLTypedAndToBytesHelper.list([
   //     CLTypedAndToBytesHelper.u32(1),
