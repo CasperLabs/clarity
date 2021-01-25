@@ -528,6 +528,14 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     if (vec.length === 0) {
       throw new Error("Can't create instance for empty list");
     }
+    let pre = '';
+    for (let i = 0; i < vec.length; i++) {
+      let cur = JSON.stringify(clTypeToJSON(vec[i].clType()));
+      if (i != 0 && pre != cur) {
+        throw new Error('The type of every list element should be the same.');
+      }
+      pre = cur;
+    }
   }
 
   public clType(): CLType {
@@ -1271,7 +1279,7 @@ export class CLTypedAndToBytesHelper {
     return new U8(u8);
   };
 
-  public static u32 = (u32: number) => {
+  public static u32: (u32: number) => U32 = (u32: number) => {
     return new U32(u32);
   };
 
@@ -1287,7 +1295,7 @@ export class CLTypedAndToBytesHelper {
     return new I64(i64);
   };
 
-  public static u128 = (u128: BigNumberish) => {
+  public static u128: (u128: BigNumberish) => U128 = (u128: BigNumberish) => {
     return new U128(u128);
   };
 

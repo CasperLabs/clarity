@@ -158,15 +158,6 @@ describe('CLValue', () => {
     expect(stringValue.asString()).to.deep.eq('');
   });
 
-  //
-  // it('should serialize a vector of CLValue correctly', () => {
-  //   const truth = decodeBase16(
-  //     '0100000015000000110000006765745f7061796d656e745f70757273650a'
-  //   );
-  //   const bytes = toBytesVecT([CLValue.string('get_payment_purse')]);
-  //   expect(bytes).to.deep.eq(truth);
-  // });
-
   it('should serialize/deserialize variants of Key correctly', () => {
     const keyAccount = CLValue.key(
       KeyValue.fromAccount(new AccountHash(Uint8Array.from(Array(32).fill(1))))
@@ -268,56 +259,32 @@ describe('CLValue', () => {
     });
   });
 
-  // it('should serialize/deserialize List correctly', () => {
-  //   const list = CLTypedAndToBytesHelper.list([
-  //     CLTypedAndToBytesHelper.u32(1),
-  //     CLTypedAndToBytesHelper.u32(2),
-  //     CLTypedAndToBytesHelper.u32(3)
-  //   ]);
-  //   // prettier-ignore
-  //   const expectedBytes = Uint8Array.from([3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]);
-  //   expect(list.toBytes()).to.deep.eq(expectedBytes);
-  //
-  //   expect(
-  //     List.fromBytes(
-  //       CLTypeHelper.list(CLTypeHelper.u32()),
-  //       expectedBytes
-  //     ).value.toBytes()
-  //   ).to.deep.eq(list.toBytes());
-  // });
-  //
-  // it('should serialze/deserialize Map correctly', () => {
-  //   const map = new MapValue([
-  //     {
-  //       key: CLTypedAndToBytesHelper.string('test1'),
-  //       value: CLTypedAndToBytesHelper.list([
-  //         CLTypedAndToBytesHelper.u64(1),
-  //         CLTypedAndToBytesHelper.u64(2)
-  //       ])
-  //     },
-  //     {
-  //       key: CLTypedAndToBytesHelper.string('test2'),
-  //       value: CLTypedAndToBytesHelper.list([
-  //         CLTypedAndToBytesHelper.u64(3),
-  //         CLTypedAndToBytesHelper.u64(4)
-  //       ])
-  //     }
-  //   ]);
-  //   // prettier-ignore
-  //   const expectBytes = Uint8Array.from([2, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 49, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 50, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0]);
-  //
-  //   expect(map.toBytes()).to.deep.eq(expectBytes);
-  //
-  //   expect(
-  //     MapValue.fromBytes(
-  //       CLTypeHelper.map(
-  //         CLTypeHelper.string(),
-  //         CLTypeHelper.list(CLTypeHelper.u64())
-  //       ),
-  //       expectBytes
-  //     ).value.toBytes()
-  //   ).to.deep.eq(expectBytes);
-  // });
+  it('should serialize/deserialize List correctly', () => {
+    const list = CLTypedAndToBytesHelper.list([
+      CLTypedAndToBytesHelper.u32(1),
+      CLTypedAndToBytesHelper.u32(2),
+      CLTypedAndToBytesHelper.u32(3)
+    ]);
+    jsonRoundTrip(CLValue.fromT(list), {
+      cl_type: { List: 'U32' },
+      bytes: '03000000010000000200000003000000'
+    });
+
+    expect(() => {
+      CLTypedAndToBytesHelper.list([
+        CLTypedAndToBytesHelper.u32(1),
+        CLTypedAndToBytesHelper.u64(2),
+        CLTypedAndToBytesHelper.u32(3)
+      ]);
+    }).to.throw();
+
+    const composedList = CLTypedAndToBytesHelper.list([list, list, list]);
+    jsonRoundTrip(CLValue.fromT(composedList), {
+      cl_type: { List: { List: 'U32' } },
+      bytes:
+        '03000000030000000100000002000000030000000300000001000000020000000300000003000000010000000200000003000000'
+    });
+  });
   //
   // it('should serialize/deserialize Option correctly', () => {
   //   const opt = CLTypedAndToBytesHelper.option(
