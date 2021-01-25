@@ -4,7 +4,7 @@
 import { toBytesString, toBytesVecT } from './byterepr';
 import { CLValue, Result, StringValue, ToBytes, U32 } from './CLValue';
 import { concat } from '@ethersproject/bytes';
-import { jsonObject } from 'typedjson';
+import { jsonMapMember, jsonObject } from 'typedjson';
 
 export class NamedArg implements ToBytes {
   constructor(public name: string, public value: CLValue) {}
@@ -31,7 +31,7 @@ export class NamedArg implements ToBytes {
 
 @jsonObject
 export class RuntimeArgs implements ToBytes {
-  // @jsonMapMember(String, CLValue)
+  @jsonMapMember(String, CLValue)
   public args: Map<string, CLValue>;
 
   constructor(args: Map<string, CLValue>) {

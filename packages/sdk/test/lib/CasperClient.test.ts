@@ -119,7 +119,7 @@ describe('CasperClient', () => {
   });
 
   // todo move it to example once we publish transfer feature
-  describe.skip('transfer', async () => {
+  it('transfer', async () => {
     const transfer = DeployUtil.ExecutableDeployItem.newTransfer(
       100000000000000,
       PublicKey.fromHex(
@@ -136,8 +136,13 @@ describe('CasperClient', () => {
       DeployUtil.standardPayment(JSBI.BigInt(100000000000000))
     );
     const signedDeploy = casperClient.signDeploy(deploy, keyPair);
-    const deployHash = await casperClient.putDeploy(signedDeploy);
-    console.log(deployHash);
+    console.log(signedDeploy);
+    const json = casperClient.deployToJson(signedDeploy);
+    console.log(json);
+    const revertDeploy = casperClient.deployFromJson(json);
+    console.log(revertDeploy);
+    // const deployHash = await casperClient.putDeploy(signedDeploy);
+    // console.log(deployHash);
   });
 
   it('should create a HK wallet and derive child account correctly', function () {

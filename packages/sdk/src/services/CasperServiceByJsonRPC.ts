@@ -293,7 +293,7 @@ export class CasperServiceByJsonRPC {
   public async deploy(signedDeploy: DeployUtil.Deploy) {
     return await this.client.request({
       method: 'account_put_deploy',
-      params: deployToJson(signedDeploy)
+      params: { deploy: deployToJson(signedDeploy) }
     });
   }
 }

@@ -11,10 +11,10 @@ import {
   CLTypedAndToBytesHelper,
   CLTypeHelper,
   CLValue,
+  Option,
   PublicKey,
   ToBytes,
-  U32,
-  Option
+  U32
 } from './CLValue';
 import {
   toBytesArrayU8,
@@ -58,6 +58,9 @@ const byteArrayJsonSerializer: (bytes: ByteArray) => string = (
 };
 
 const byteArrayJsonDeserializer: (str: string) => ByteArray = (str: string) => {
+  if (!str) {
+    return Uint8Array.from([]);
+  }
   return decodeBase16(str);
 };
 
@@ -119,7 +122,7 @@ export class DeployHeader implements ToBytes {
    * @param dependencies Other deploys that have to be run before this one.
    * @param chainName Which chain the deploy is supposed to be run on.
    */
-  constructor(
+  public static newDeployHeader(
     account: PublicKey,
     timestamp: number,
     ttl: number,
@@ -128,13 +131,15 @@ export class DeployHeader implements ToBytes {
     dependencies: ByteArray[],
     chainName: string
   ) {
-    this.account = account;
-    this.timestamp = timestamp;
-    this.ttl = ttl;
-    this.gasPrice = gasPrice;
-    this.bodyHash = bodyHash;
-    this.dependencies = dependencies;
-    this.chainName = chainName;
+    const deployHeader = new DeployHeader();
+    deployHeader.account = account;
+    deployHeader.timestamp = timestamp;
+    deployHeader.ttl = ttl;
+    deployHeader.gasPrice = gasPrice;
+    deployHeader.bodyHash = bodyHash;
+    deployHeader.dependencies = dependencies;
+    deployHeader.chainName = chainName;
+    return deployHeader;
   }
 
   public toBytes(): ByteArray {
@@ -208,11 +213,11 @@ export class ModuleBytes extends ExecutableDeployItemInternal {
   })
   public args: RuntimeArgs;
 
-  constructor(moduleBytes: Uint8Array, args: RuntimeArgs) {
-    super();
-
-    this.moduleBytes = moduleBytes;
-    this.args = args;
+  public static new(moduleBytes: Uint8Array, args: RuntimeArgs) {
+    const mb = new ModuleBytes();
+    mb.moduleBytes = moduleBytes;
+    mb.args = args;
+    return mb;
   }
 
   public toBytes(): ByteArray {
@@ -245,12 +250,12 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
   })
   public args: RuntimeArgs;
 
-  constructor(hash: ByteArray, entryPoint: string, args: RuntimeArgs) {
-    super();
-
-    this.entryPoint = entryPoint;
-    this.args = args;
-    this.hash = hash;
+  public static new(hash: ByteArray, entryPoint: string, args: RuntimeArgs) {
+    const sc = new StoredContractByHash();
+    sc.entryPoint = entryPoint;
+    sc.args = args;
+    sc.hash = hash;
+    return sc;
   }
 
   public toBytes(): ByteArray {
@@ -281,12 +286,12 @@ export class StoredContractByName extends ExecutableDeployItemInternal {
   })
   public args: RuntimeArgs;
 
-  constructor(name: string, entryPoint: string, args: RuntimeArgs) {
-    super();
-
-    this.name = name;
-    this.entryPoint = entryPoint;
-    this.args = args;
+  public static new(name: string, entryPoint: string, args: RuntimeArgs) {
+    const sc = new StoredContractByName();
+    sc.name = name;
+    sc.entryPoint = entryPoint;
+    sc.args = args;
+    return sc;
   }
 
   public toBytes(): ByteArray {
@@ -317,17 +322,18 @@ export class StoredVersionedContractByName extends ExecutableDeployItemInternal 
   })
   public args: RuntimeArgs;
 
-  constructor(
+  public static new(
     name: string,
     version: number | null,
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    super();
-    this.name = name;
-    this.version = version;
-    this.entryPoint = entryPoint;
-    this.args = args;
+    const svc = new StoredVersionedContractByName();
+    svc.name = name;
+    svc.version = version;
+    svc.entryPoint = entryPoint;
+    svc.args = args;
+    return svc;
   }
 
   public toBytes(): ByteArray {
@@ -374,17 +380,18 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
   })
   public args: RuntimeArgs;
 
-  constructor(
+  public static new(
     hash: Uint8Array,
     version: number | null,
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    super();
-    this.hash = hash;
-    this.version = version;
-    this.entryPoint = entryPoint;
-    this.args = args;
+    const storedVersionedContractByHash = new StoredVersionedContractByHash();
+    storedVersionedContractByHash.hash = hash;
+    storedVersionedContractByHash.version = version;
+    storedVersionedContractByHash.entryPoint = entryPoint;
+    storedVersionedContractByHash.args = args;
+    return storedVersionedContractByHash;
   }
 
   public toBytes(): ByteArray {
@@ -422,13 +429,13 @@ export class Transfer extends ExecutableDeployItemInternal {
    * transfer will be used as the source purse
    * @param id user-defined transfer id
    */
-  constructor(
+  public static new(
     amount: BigNumberish,
     target: URef | PublicKey,
     sourcePurse?: URef,
     id: number | null = null
   ) {
-    super();
+    const transfer = new Transfer();
     const runtimeArgs = RuntimeArgs.fromMap({});
     runtimeArgs.insert('amount', CLValue.u512(amount));
     if (sourcePurse) {
@@ -449,7 +456,8 @@ export class Transfer extends ExecutableDeployItemInternal {
         CLValue.option(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
       );
     }
-    this.args = runtimeArgs;
+    transfer.args = runtimeArgs;
+    return transfer;
   }
 
   public toBytes(): ByteArray {
@@ -546,7 +554,7 @@ export class ExecutableDeployItem implements ToBytes {
     args: RuntimeArgs
   ): ExecutableDeployItem {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new ModuleBytes(moduleBytes, args)
+      ModuleBytes.new(moduleBytes, args)
     );
   }
 
@@ -556,7 +564,7 @@ export class ExecutableDeployItem implements ToBytes {
     args: RuntimeArgs
   ) {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new StoredContractByHash(hash, entryPoint, args)
+      StoredContractByHash.new(hash, entryPoint, args)
     );
   }
 
@@ -566,7 +574,7 @@ export class ExecutableDeployItem implements ToBytes {
     args: RuntimeArgs
   ) {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new StoredContractByName(name, entryPoint, args)
+      StoredContractByName.new(name, entryPoint, args)
     );
   }
 
@@ -577,7 +585,7 @@ export class ExecutableDeployItem implements ToBytes {
     args: RuntimeArgs
   ) {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new StoredVersionedContractByHash(hash, version, entryPoint, args)
+      StoredVersionedContractByHash.new(hash, version, entryPoint, args)
     );
   }
 
@@ -588,7 +596,7 @@ export class ExecutableDeployItem implements ToBytes {
     args: RuntimeArgs
   ) {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new StoredVersionedContractByName(name, version, entryPoint, args)
+      StoredVersionedContractByName.new(name, version, entryPoint, args)
     );
   }
 
@@ -599,7 +607,7 @@ export class ExecutableDeployItem implements ToBytes {
     id: number | null = null
   ) {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new Transfer(amount, target, sourcePurse, id)
+      Transfer.new(amount, target, sourcePurse, id)
     );
   }
 
@@ -691,18 +699,20 @@ export class Deploy {
    * @param session the ExecutableDeployItem for session code.
    * @param approvals  An array of signature and public key of the signers, who approve this deploy
    */
-  constructor(
+  public static newDeploy(
     hash: ByteArray,
     header: DeployHeader,
     payment: ExecutableDeployItem,
     session: ExecutableDeployItem,
     approvals: Approval[]
   ) {
-    this.approvals = approvals;
-    this.session = session;
-    this.payment = payment;
-    this.header = header;
-    this.hash = hash;
+    const deploy = new Deploy();
+    deploy.approvals = approvals;
+    deploy.session = session;
+    deploy.payment = payment;
+    deploy.header = header;
+    deploy.hash = hash;
+    return deploy;
   }
 
   public isTransfer(): boolean {
@@ -785,7 +795,7 @@ export function makeDeploy(
   const serializedBody = serializeBody(payment, session);
   const bodyHash = blake.blake2b(serializedBody, null, 32);
 
-  const header: DeployHeader = new DeployHeader(
+  const header: DeployHeader = DeployHeader.newDeployHeader(
     deployParam.accountPublicKey,
     deployParam.timestamp!,
     deployParam.ttl,
@@ -796,7 +806,7 @@ export function makeDeploy(
   );
   const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
-  return new Deploy(deployHash, header, payment, session, []);
+  return Deploy.newDeploy(deployHash, header, payment, session, []);
 }
 
 /**
@@ -871,9 +881,7 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
  */
 export const deployToJson = (deploy: Deploy) => {
   const serializer = new TypedJSON(Deploy);
-  return {
-    deploy: serializer.stringify(deploy)
-  };
+  return serializer.stringify(deploy);
 };
 
 /**

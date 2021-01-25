@@ -530,8 +530,8 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     }
     let pre = '';
     for (let i = 0; i < vec.length; i++) {
-      let cur = JSON.stringify(clTypeToJSON(vec[i].clType()));
-      if (i != 0 && pre != cur) {
+      const cur = JSON.stringify(clTypeToJSON(vec[i].clType()));
+      if (i !== 0 && pre !== cur) {
         throw new Error('The type of every list element should be the same.');
       }
       pre = cur;
@@ -1252,7 +1252,7 @@ class ByteArrayValue extends CLTypedAndToBytes {
   }
 
   public toBytes(): ByteArray {
-    return toBytesBytesArray(this.rawBytes);
+    return toBytesArrayU8(this.rawBytes);
   }
 
   public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {

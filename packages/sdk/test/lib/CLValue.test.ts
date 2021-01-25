@@ -4,11 +4,11 @@ import {
   CLTypedAndToBytesHelper,
   CLValue,
   KeyValue,
-  URef
+  URef,
+  CLTypeHelper
 } from '../../src';
 import { TypedJSON } from 'typedjson';
 import { BigNumber } from '@ethersproject/bignumber';
-import { CLTypeHelper } from '../../dist';
 
 const clValueSerializer = new TypedJSON(CLValue);
 
