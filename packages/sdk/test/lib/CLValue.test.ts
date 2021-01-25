@@ -8,6 +8,7 @@ import {
 } from '../../src';
 import { TypedJSON } from 'typedjson';
 import { BigNumber } from '@ethersproject/bignumber';
+import { CLTypeHelper } from '../../dist';
 
 const clValueSerializer = new TypedJSON(CLValue);
 
@@ -285,58 +286,31 @@ describe('CLValue', () => {
         '03000000030000000100000002000000030000000300000001000000020000000300000003000000010000000200000003000000'
     });
   });
-  //
-  // it('should serialize/deserialize Option correctly', () => {
-  //   const opt = CLTypedAndToBytesHelper.option(
-  //     CLTypedAndToBytesHelper.string('test')
-  //   );
-  //   const expectBytes = Uint8Array.from([1, 4, 0, 0, 0, 116, 101, 115, 116]);
-  //   expect(opt.toBytes()).to.deep.eq(expectBytes);
-  //
-  //   expect(
-  //     Option.fromBytes(
-  //       CLTypeHelper.option(CLTypeHelper.string()),
-  //       expectBytes
-  //     ).value.toBytes()
-  //   ).to.deep.eq(expectBytes);
-  // });
-  //
-  // it('should serialize ByteArray correctly', () => {
-  //   const byteArray = Uint8Array.from(Array(32).fill(42));
-  //   const bytes = CLValue.byteArray(byteArray).toBytes();
-  //   expect(bytes).to.deep.eq(
-  //     // prettier-ignore
-  //     Uint8Array.from([
-  //       32, 0, 0, 0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-  //       42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 15,
-  //       32, 0, 0, 0
-  //     ])
-  //   );
-  // });
-  //
-  // it('should serialize PublicKey correctly', () => {
-  //   const publicKey = Uint8Array.from(Array(32).fill(42));
-  //   const bytes = PublicKey.fromEd25519(publicKey).toBytes();
-  //   expect(bytes).to.deep.eq(
-  //     // prettier-ignore
-  //     Uint8Array.from([
-  //       1, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-  //       42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42
-  //     ])
-  //   );
-  // });
-  //
-  // it('should compute hex from PublicKey correctly', () => {
-  //   const ed25519Account = Keys.Ed25519.new();
-  //   const ed25519AccountHex = ed25519Account.accountHex();
-  //   expect(PublicKey.fromHex(ed25519AccountHex)).to.deep.equal(
-  //     ed25519Account.publicKey
-  //   );
-  //
-  //   const secp256K1Account = Keys.Secp256K1.new();
-  //   const secp256K1AccountHex = secp256K1Account.accountHex();
-  //   expect(PublicKey.fromHex(secp256K1AccountHex)).to.deep.equal(
-  //     secp256K1Account.publicKey
-  //   );
-  // });
+
+  it('should serialize/deserialize Option correctly', () => {
+    const opt = CLTypedAndToBytesHelper.option(
+      CLTypedAndToBytesHelper.string('test')
+    );
+
+    jsonRoundTrip(CLValue.fromT(opt), {
+      cl_type: { Option: 'String' },
+      bytes: '010400000074657374'
+    });
+
+    const list = CLTypedAndToBytesHelper.list([
+      CLTypedAndToBytesHelper.u32(1),
+      CLTypedAndToBytesHelper.u32(2),
+      CLTypedAndToBytesHelper.u32(3)
+    ]);
+
+    jsonRoundTrip(CLValue.fromT(CLTypedAndToBytesHelper.option(list)), {
+      cl_type: { Option: { List: 'U32' } },
+      bytes: '0103000000010000000200000003000000'
+    });
+
+    jsonRoundTrip(
+      CLValue.fromT(CLTypedAndToBytesHelper.option(null, CLTypeHelper.u32())),
+      { cl_type: { Option: 'U32' }, bytes: '00' }
+    );
+  });
 });
