@@ -126,10 +126,7 @@ describe('CasperClient', () => {
         '01a72eb5ba13e243d40e56b0547536e3ad1584eee5a386c7be5d5a1f94c09a6592'
       )
     );
-    const keyPair = Ed25519.parseKeyFiles(
-      '../server/test.public.key',
-      '../server/test.private.key'
-    );
+    const keyPair = Ed25519.new();
     const deploy = casperClient.makeTransferDeploy(
       new DeployUtil.DeployParams(keyPair.publicKey, 'casper-net-1'),
       transfer,
@@ -141,8 +138,8 @@ describe('CasperClient', () => {
     console.log(json);
     const revertDeploy = casperClient.deployFromJson(json);
     console.log(revertDeploy);
-    // const deployHash = await casperClient.putDeploy(signedDeploy);
-    // console.log(deployHash);
+    const json2 = casperClient.deployToJson(revertDeploy!);
+    expect(json2).to.deep.eq(json);
   });
 
   it('should create a HK wallet and derive child account correctly', function () {
