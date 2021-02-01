@@ -9,7 +9,7 @@ import { jsonMember, jsonObject, TypedJSON } from 'typedjson';
 export class NamedArg implements ToBytes {
   constructor(public name: string, public value: CLValue) {}
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     const name = toBytesString(this.name);
     const value = this.value.toBytes();
     return concat([name, value]);

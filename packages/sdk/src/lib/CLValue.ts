@@ -24,7 +24,7 @@ type Type<T> = new (...args: any[]) => T;
  * Static interface  declaration
  */
 export interface BytesDeserializableStatic<T> extends Type<BytesSerializable> {
-  fromBytes(bytes: ByteArray): Result<T>;
+  fromBytes(bytes: Uint8Array): Result<T>;
 }
 
 export interface BytesSerializable extends CLTyped, ToBytes {}
@@ -43,9 +43,9 @@ export interface ToBytes {
 export abstract class CLTypedAndToBytes implements BytesSerializable {
   public abstract clType(): CLType;
 
-  public abstract toBytes(): ByteArray;
+  public abstract toBytes(): Uint8Array;
 
-  public clTypeEncoded(): ByteArray {
+  public clTypeEncoded(): Uint8Array {
     return CLTypeHelper.toBytesHelper(this.clType());
   }
 }
@@ -121,7 +121,7 @@ export class Result<T> {
    */
   constructor(
     private val: T | null,
-    private rem: ByteArray | null,
+    private rem: Uint8Array | null,
     public error: FromBytesError
   ) {}
 
@@ -129,11 +129,11 @@ export class Result<T> {
     return new Result<T>(null, null, errorCode);
   }
 
-  public static Ok<T>(val: T, rem: ByteArray) {
+  public static Ok<T>(val: T, rem: Uint8Array) {
     return new Result<T>(val, rem, FromBytesError.Ok);
   }
 
-  get remainder(): ByteArray {
+  get remainder(): Uint8Array {
     if (this.rem === null) {
       throw new Error("Don't have remainder");
     }
@@ -173,7 +173,7 @@ export class Bool extends CLTypedAndToBytes {
     super();
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return new Uint8Array([this.val ? 1 : 0]);
   }
 
@@ -181,7 +181,7 @@ export class Bool extends CLTypedAndToBytes {
     return SimpleType.Bool;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<Bool> {
+  public static fromBytes(bytes: Uint8Array): Result<Bool> {
     if (bytes.length === 0) {
       return Result.Err<Bool>(FromBytesError.EarlyEndOfStream);
     }
@@ -209,7 +209,7 @@ abstract class NumberCoder extends CLTypedAndToBytes {
     this.val = BigNumber.from(value);
   }
 
-  public toBytes = (): ByteArray => {
+  public toBytes = (): Uint8Array => {
     return toBytesNumber(this.bitSize, this.signed, this.val);
   };
 
@@ -226,7 +226,7 @@ export class U8 extends NumberCoder {
     return SimpleType.U8;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U8> {
+  public static fromBytes(bytes: Uint8Array): Result<U8> {
     if (bytes.length === 0) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -244,7 +244,7 @@ export class U32 extends NumberCoder {
     return SimpleType.U32;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U32> {
+  public static fromBytes(bytes: Uint8Array): Result<U32> {
     if (bytes.length < 4) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -265,7 +265,7 @@ export class I32 extends NumberCoder {
     return SimpleType.I32;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<I32> {
+  public static fromBytes(bytes: Uint8Array): Result<I32> {
     if (bytes.length < 4) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -285,7 +285,7 @@ export class U64 extends NumberCoder {
     return SimpleType.U64;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U64> {
+  public static fromBytes(bytes: Uint8Array): Result<U64> {
     const tmp = Uint8Array.from(bytes);
     if (bytes.length < 8) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
@@ -306,7 +306,7 @@ export class I64 extends NumberCoder {
     return SimpleType.I64;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<I64> {
+  public static fromBytes(bytes: Uint8Array): Result<I64> {
     if (bytes.length < 8) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -330,7 +330,7 @@ export class U128 extends NumberCoder {
     return SimpleType.U128;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U128> {
+  public static fromBytes(bytes: Uint8Array): Result<U128> {
     return fromBytesBigInt(bytes, 128);
   }
 }
@@ -345,7 +345,7 @@ class U256 extends NumberCoder {
     return SimpleType.U256;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U256> {
+  public static fromBytes(bytes: Uint8Array): Result<U256> {
     return fromBytesBigInt(bytes, 256);
   }
 }
@@ -360,7 +360,7 @@ export class U512 extends NumberCoder {
     return SimpleType.U512;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U512> {
+  public static fromBytes(bytes: Uint8Array): Result<U512> {
     return fromBytesBigInt(bytes, 512);
   }
 }
@@ -371,11 +371,11 @@ export class Unit extends CLTypedAndToBytes {
     return SimpleType.Unit;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return Uint8Array.from([]);
   }
 
-  public static fromBytes(bytes: ByteArray): Result<Unit> {
+  public static fromBytes(bytes: Uint8Array): Result<Unit> {
     return Result.Ok<Unit>(new Unit(), bytes);
   }
 }
@@ -394,7 +394,7 @@ export class StringValue extends CLTypedAndToBytes {
     return SimpleType.String;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<StringValue> {
+  public static fromBytes(bytes: Uint8Array): Result<StringValue> {
     const res = U32.fromBytes(bytes);
     if (res.hasError()) {
       return Result.Err(res.error);
@@ -410,7 +410,7 @@ export class StringValue extends CLTypedAndToBytes {
 
 export const fromBytesByCLType = (
   type: CLType,
-  bytes: ByteArray
+  bytes: Uint8Array
 ): Result<CLTypedAndToBytes> => {
   if (type instanceof ListType) {
     return List.fromBytes(type, bytes);
@@ -433,7 +433,7 @@ export const fromBytesByCLType = (
 
 const fromBytesSimpleType = (
   simpleType: SimpleType,
-  bytes: ByteArray
+  bytes: Uint8Array
 ): Result<CLTypedAndToBytes> => {
   let innerRes: Result<CLTypedAndToBytes>;
   switch (simpleType) {
@@ -502,13 +502,13 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     return CLTypeHelper.list(this.vec[0].clType());
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return toBytesVecT(this.vec);
   }
 
   public static fromBytes(
     type: ListType,
-    bytes: ByteArray
+    bytes: Uint8Array
   ): Result<List<CLTypedAndToBytes>> {
     const u32Res = U32.fromBytes(bytes);
     if (u32Res.hasError()) {
@@ -534,7 +534,7 @@ export class Tuple1 extends CLTypedAndToBytes {
     super();
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return this.v0.toBytes();
   }
 
@@ -542,7 +542,7 @@ export class Tuple1 extends CLTypedAndToBytes {
     return CLTypeHelper.tuple1(this.v0.clType());
   }
 
-  public static fromBytes(type: Tuple1Type, bytes: ByteArray): Result<Tuple1> {
+  public static fromBytes(type: Tuple1Type, bytes: Uint8Array): Result<Tuple1> {
     const innerRes = fromBytesByCLType(type.t0, bytes);
     if (innerRes.hasError()) {
       return Result.Err(innerRes.error);
@@ -557,7 +557,7 @@ export class Tuple2 extends CLTypedAndToBytes {
     super();
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([this.v0.toBytes(), this.v1.toBytes()]);
   }
 
@@ -565,7 +565,7 @@ export class Tuple2 extends CLTypedAndToBytes {
     return CLTypeHelper.tuple2(this.v0.clType(), this.v1.clType());
   }
 
-  public static fromBytes(type: Tuple2Type, bytes: ByteArray): Result<Tuple2> {
+  public static fromBytes(type: Tuple2Type, bytes: Uint8Array): Result<Tuple2> {
     const t0Res = fromBytesByCLType(type.t0, bytes);
     if (t0Res.hasError()) {
       return Result.Err(t0Res.error);
@@ -596,11 +596,11 @@ export class Tuple3 extends CLTypedAndToBytes {
     );
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([this.v0.toBytes(), this.v1.toBytes(), this.v2.toBytes()]);
   }
 
-  public static fromBytes(type: Tuple3Type, bytes: ByteArray): Result<Tuple3> {
+  public static fromBytes(type: Tuple3Type, bytes: Uint8Array): Result<Tuple3> {
     const t0Res = fromBytesByCLType(type.t0, bytes);
     if (t0Res.hasError()) {
       return Result.Err(t0Res.error);
@@ -620,7 +620,7 @@ export class Tuple3 extends CLTypedAndToBytes {
 
 @staticImplements<BytesDeserializableStatic<PublicKey>>()
 export class PublicKey extends CLTypedAndToBytes {
-  constructor(public rawPublicKey: ByteArray, private tag: number) {
+  constructor(public rawPublicKey: Uint8Array, private tag: number) {
     super();
   }
 
@@ -628,7 +628,7 @@ export class PublicKey extends CLTypedAndToBytes {
     return SimpleType.PublicKey;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.rawPublicKey)
@@ -650,7 +650,7 @@ export class PublicKey extends CLTypedAndToBytes {
     return accountHash;
   }
 
-  public toAccountHash(): ByteArray {
+  public toAccountHash(): Uint8Array {
     const algorithmIdentifier = this.signatureAlgorithm();
     const separator = Buffer.from([0]);
     const prefix = Buffer.concat([
@@ -665,16 +665,16 @@ export class PublicKey extends CLTypedAndToBytes {
     }
   }
 
-  public static fromEd25519(publicKey: ByteArray) {
+  public static fromEd25519(publicKey: Uint8Array) {
     return new PublicKey(publicKey, ED25519_TAG);
   }
 
-  public static fromSecp256K1(publicKey: ByteArray) {
+  public static fromSecp256K1(publicKey: Uint8Array) {
     return new PublicKey(publicKey, SECP256K1_TAG);
   }
 
   public static from(
-    publicKey: ByteArray,
+    publicKey: Uint8Array,
     signatureAlgorithm: SignatureAlgorithm
   ) {
     switch (signatureAlgorithm) {
@@ -719,7 +719,7 @@ export class PublicKey extends CLTypedAndToBytes {
   }
 
   /** Deserializes a `PublicKey` from an array of bytes. */
-  public static fromBytes(bytes: ByteArray): Result<PublicKey> {
+  public static fromBytes(bytes: Uint8Array): Result<PublicKey> {
     if (bytes.length < 1) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -759,7 +759,7 @@ export class MapValue extends CLTypedAndToBytes {
     super();
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     const kvBytes: Uint8Array[] = this.v.map(vv => {
       return concat([vv.key.toBytes(), vv.value.toBytes()]);
     });
@@ -771,7 +771,7 @@ export class MapValue extends CLTypedAndToBytes {
     return new MapType(this.v[0].key.clType(), this.v[0].value.clType());
   }
 
-  public static fromBytes(type: MapType, bytes: ByteArray): Result<MapValue> {
+  public static fromBytes(type: MapType, bytes: Uint8Array): Result<MapValue> {
     const u32Res = U32.fromBytes(bytes);
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
@@ -798,7 +798,7 @@ export class MapValue extends CLTypedAndToBytes {
 
 @staticImplements<BytesDeserializableStatic<ByteArrayValue>>()
 class ByteArrayValue extends CLTypedAndToBytes {
-  constructor(public rawBytes: ByteArray) {
+  constructor(public rawBytes: Uint8Array) {
     super();
   }
 
@@ -806,20 +806,20 @@ class ByteArrayValue extends CLTypedAndToBytes {
     return CLTypeHelper.byteArray(this.rawBytes.length);
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return toBytesBytesArray(this.rawBytes);
   }
 
-  public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
+  public static fromBytes(bytes: Uint8Array): Result<ByteArrayValue> {
     const b = new ByteArrayValue(bytes);
     return Result.Ok(b, bytes.subarray(32));
   }
 }
 
 const fromBytesBigInt: (
-  bytes: ByteArray,
+  bytes: Uint8Array,
   bitSize: number
-) => Result<U128 | U256 | U512> = (bytes: ByteArray, bitSize: number) => {
+) => Result<U128 | U256 | U512> = (bytes: Uint8Array, bitSize: number) => {
   const byteSize = bitSize / 8;
   if (bytes.length < 1) {
     return Result.Err(FromBytesError.EarlyEndOfStream);
@@ -1056,7 +1056,7 @@ export class CLTypeHelper {
     return new Tuple3Type(t0, t1, t2);
   }
 
-  public static fromBytes(bytes: ByteArray): Result<CLType> {
+  public static fromBytes(bytes: Uint8Array): Result<CLType> {
     if (bytes.length < 1) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -1194,7 +1194,7 @@ export class CLTypeHelper {
     }
   }
 
-  public static toBytesHelper(type: CLType): ByteArray {
+  public static toBytesHelper(type: CLType): Uint8Array {
     if (type instanceof ListType) {
       return concat([
         Uint8Array.from([type.tag]),
@@ -1329,11 +1329,11 @@ export class CLTypedAndToBytesHelper {
     return new MapValue(mapEntries);
   }
 
-  public static publicKey(publicKey: ByteArray) {
+  public static publicKey(publicKey: Uint8Array) {
     return PublicKey.fromEd25519(publicKey);
   }
 
-  public static bytes(bytes: ByteArray) {
+  public static bytes(bytes: Uint8Array) {
     return new ByteArrayValue(bytes);
   }
 }
@@ -1524,7 +1524,7 @@ export class CLValue implements ToBytes {
     ]);
   }
 
-  public static fromBytes(bytes: ByteArray): Result<CLValue> {
+  public static fromBytes(bytes: Uint8Array): Result<CLValue> {
     const bytesRes = ByteArrayValue.fromBytes(bytes);
     if (bytesRes.hasError()) {
       return Result.Err(bytesRes.error);
@@ -1629,11 +1629,11 @@ export class CLValue implements ToBytes {
     return CLValue.fromT(new MapValue(mapEntries));
   }
 
-  public static publicKey(publicKey: ByteArray) {
+  public static publicKey(publicKey: Uint8Array) {
     return CLValue.fromT(PublicKey.fromEd25519(publicKey));
   }
 
-  public static byteArray(bytes: ByteArray) {
+  public static byteArray(bytes: Uint8Array) {
     return CLValue.fromT(new ByteArrayValue(bytes));
   }
 
@@ -1776,7 +1776,7 @@ export class AccountHash extends CLTypedAndToBytes {
     return CLTypeHelper.byteArray(ACCOUNT_HASH_LENGTH);
   }
 
-  public static fromBytes(bytes: ByteArray): Result<AccountHash> {
+  public static fromBytes(bytes: Uint8Array): Result<AccountHash> {
     if (bytes.length < ACCOUNT_HASH_LENGTH) {
       return Result.Err<AccountHash>(FromBytesError.EarlyEndOfStream);
     }
@@ -1854,7 +1854,7 @@ export class KeyValue extends CLTypedAndToBytes {
     }
   }
 
-  public static fromBytes(bytes: ByteArray): Result<KeyValue> {
+  public static fromBytes(bytes: Uint8Array): Result<KeyValue> {
     if (bytes.length < 1) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -1965,7 +1965,7 @@ export class URef extends CLTypedAndToBytes {
    * Serializes the URef into an array of bytes that represents it in the Casper serialization
    * format.
    */
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([this.uRefAddr, Uint8Array.from([this.accessRights])]);
   }
 
@@ -1973,7 +1973,7 @@ export class URef extends CLTypedAndToBytes {
     return CLTypeHelper.uRef();
   }
 
-  public static fromBytes(bytes: ByteArray): Result<URef> {
+  public static fromBytes(bytes: Uint8Array): Result<URef> {
     if (bytes.length < UREF_BYTES_LENGTH) {
       return Result.Err<URef>(FromBytesError.EarlyEndOfStream);
     }
