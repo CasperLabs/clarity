@@ -83,7 +83,7 @@ export class Option extends CLTypedAndToBytes {
     return CLTypeHelper.option(this.innerType!);
   }
 
-  public static fromBytes(type: OptionType, bytes: ByteArray): Result<Option> {
+  public static fromBytes(type: OptionType, bytes: Uint8Array): Result<Option> {
     const u8Res = U8.fromBytes(bytes);
     if (u8Res.hasError()) {
       return Result.Err(u8Res.error);

@@ -51,8 +51,8 @@ const shortEnglishHumanizer = humanizeDuration.humanizer({
   }
 });
 
-const byteArrayJsonSerializer: (bytes: ByteArray) => string = (
-  bytes: ByteArray
+const byteArrayJsonSerializer: (bytes: Uint8Array) => string = (
+  bytes: Uint8Array
 ) => {
   return encodeBase16(bytes);
 };
@@ -101,15 +101,15 @@ export class DeployHeader implements ToBytes {
     serializer: byteArrayJsonSerializer,
     deserializer: byteArrayJsonDeserializer
   })
-  public bodyHash: ByteArray;
+  public bodyHash: Uint8Array;
 
   @jsonArrayMember(ByteArray, {
-    serializer: (value: ByteArray[]) =>
+    serializer: (value: Uint8Array[]) =>
       value.map(it => byteArrayJsonSerializer(it)),
     deserializer: (json: any) =>
       json.map((it: string) => byteArrayJsonDeserializer(it))
   })
-  public dependencies: ByteArray[];
+  public dependencies: Uint8Array[];
 
   @jsonMember({ name: 'chain_name', constructor: String })
   public chainName: string;
@@ -130,8 +130,8 @@ export class DeployHeader implements ToBytes {
     timestamp: number,
     ttl: number,
     gasPrice: number,
-    bodyHash: ByteArray,
-    dependencies: ByteArray[],
+    bodyHash: Uint8Array,
+    dependencies: Uint8Array[],
     chainName: string
   ) {
     this.account = account;
@@ -143,7 +143,7 @@ export class DeployHeader implements ToBytes {
     this.chainName = chainName;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       this.account.toBytes(),
       toBytesU64(this.timestamp),
@@ -160,9 +160,9 @@ export class DeployHeader implements ToBytes {
  * The cryptographic hash of a Deploy.
  */
 class DeployHash implements ToBytes {
-  constructor(private hash: ByteArray) {}
+  constructor(private hash: Uint8Array) {}
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return toBytesDeployHash(this.hash);
   }
 }
@@ -191,7 +191,7 @@ abstract class ExecutableDeployItemInternal implements ToBytes {
 
   public abstract args: RuntimeArgs;
 
-  public abstract toBytes(): ByteArray;
+  public abstract toBytes(): Uint8Array;
 
   public getArgByName(argName: string): CLValue | undefined {
     return this.args.args.get(argName);
@@ -236,7 +236,7 @@ export class ModuleBytes extends ExecutableDeployItemInternal {
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesArrayU8(this.moduleBytes),
@@ -253,7 +253,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
     serializer: byteArrayJsonSerializer,
     deserializer: byteArrayJsonDeserializer
   })
-  public hash: ByteArray;
+  public hash: Uint8Array;
 
   @jsonMember({
     name: 'entry_point',
@@ -267,7 +267,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
   })
   public args: RuntimeArgs;
 
-  constructor(hash: ByteArray, entryPoint: string, args: RuntimeArgs) {
+  constructor(hash: Uint8Array, entryPoint: string, args: RuntimeArgs) {
     super();
 
     this.entryPoint = entryPoint;
@@ -275,7 +275,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
     this.hash = hash;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.hash),
@@ -312,7 +312,7 @@ export class StoredContractByName extends ExecutableDeployItemInternal {
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesString(this.name),
@@ -354,7 +354,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItemInternal 
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     let serializedVersion;
     if (this.version === null) {
       serializedVersion = new Option(null, CLTypeHelper.u32());
@@ -412,7 +412,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     let serializedVersion;
 
     if (this.version === null) {
@@ -453,7 +453,7 @@ export class Transfer extends ExecutableDeployItemInternal {
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.args.toBytes())
@@ -498,7 +498,7 @@ export class ExecutableDeployItem implements ToBytes {
   })
   public transfer?: Transfer;
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     if (this.isModuleBytes()) {
       return this.moduleBytes!.toBytes();
     } else if (this.isStoredContractByHash()) {
@@ -560,7 +560,7 @@ export class ExecutableDeployItem implements ToBytes {
   }
 
   public static newModuleBytes(
-    moduleBytes: ByteArray,
+    moduleBytes: Uint8Array,
     args: RuntimeArgs
   ): ExecutableDeployItem {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
@@ -711,7 +711,7 @@ export class Deploy {
     serializer: byteArrayJsonSerializer,
     deserializer: byteArrayJsonDeserializer
   })
-  public hash: ByteArray;
+  public hash: Uint8Array;
 
   @jsonMember({ constructor: DeployHeader })
   public header: DeployHeader;
@@ -738,7 +738,7 @@ export class Deploy {
    * @param approvals  An array of signature and public key of the signers, who approve this deploy
    */
   constructor(
-    hash: ByteArray,
+    hash: Uint8Array,
     header: DeployHeader,
     payment: ExecutableDeployItem,
     session: ExecutableDeployItem,
@@ -880,7 +880,7 @@ export const signDeploy = (
  */
 export const setSignature = (
   deploy: Deploy,
-  sig: ByteArray,
+  sig: Uint8Array,
   publicKey: PublicKey
 ): Deploy => {
   const approval = new Approval();

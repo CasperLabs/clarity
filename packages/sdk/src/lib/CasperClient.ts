@@ -44,7 +44,7 @@ export class CasperClient {
   public loadPublicKeyFromFile(
     path: string,
     algo: SignatureAlgorithm
-  ): ByteArray {
+  ): Uint8Array {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.parsePublicKeyFile(path);
@@ -62,7 +62,7 @@ export class CasperClient {
   public loadPrivateKeyFromFile(
     path: string,
     algo: SignatureAlgorithm
-  ): ByteArray {
+  ): Uint8Array {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.parsePrivateKeyFile(path);
@@ -98,7 +98,7 @@ export class CasperClient {
    *
    * @param seed The seed buffer for parent key
    */
-  public newHdWallet(seed: ByteArray): CasperHDKey {
+  public newHdWallet(seed: Uint8Array): CasperHDKey {
     return CasperHDKey.fromMasterSeed(seed);
   }
 
@@ -107,9 +107,9 @@ export class CasperClient {
    * @param privateKey
    */
   public privateToPublicKey(
-    privateKey: ByteArray,
+    privateKey: Uint8Array,
     algo: SignatureAlgorithm
-  ): ByteArray {
+  ): Uint8Array {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.privateToPublicKey(privateKey);
