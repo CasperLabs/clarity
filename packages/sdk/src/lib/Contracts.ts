@@ -2,10 +2,10 @@ import blake from 'blakejs';
 import * as fs from 'fs';
 import { PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
+import { DeployParams, ExecutableDeployItem } from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
-import { CLValue, AccountHash, KeyValue } from './CLValue';
+import { AccountHash, CLValue, KeyValue } from './CLValue';
 import { AsymmetricKey } from './Keys';
-import { DeployParams } from './DeployUtil';
 
 // https://www.npmjs.com/package/tweetnacl-ts
 // https://github.com/dcposch/blakejs
@@ -15,13 +15,13 @@ import { DeployParams } from './DeployUtil';
  *
  * @param x
  */
-export function byteHash(x: ByteArray): ByteArray {
+export function byteHash(x: Uint8Array): Uint8Array {
   return blake.blake2b(x, null, 32);
 }
 
 export class Contract {
-  private sessionWasm: ByteArray;
-  private paymentWasm: ByteArray;
+  private sessionWasm: Uint8Array;
+  private paymentWasm: Uint8Array;
 
   /**
    *
@@ -53,17 +53,14 @@ export class Contract {
     signingKeyPair: AsymmetricKey,
     chainName: string
   ): DeployUtil.Deploy {
-    const session = new DeployUtil.ModuleBytes(
-      this.sessionWasm,
-      args.toBytes()
-    );
+    const session = ExecutableDeployItem.newModuleBytes(this.sessionWasm, args);
     const paymentArgs = RuntimeArgs.fromMap({
       amount: CLValue.u512(paymentAmount.toString())
     });
 
-    const payment = new DeployUtil.ModuleBytes(
+    const payment = ExecutableDeployItem.newModuleBytes(
       this.paymentWasm,
-      paymentArgs.toBytes()
+      paymentArgs
     );
 
     const deploy = DeployUtil.makeDeploy(
@@ -105,7 +102,7 @@ export class Faucet {
    *
    * @param accountPublicKeyHash the public key hash that want to be funded
    */
-  public static args(accountPublicKeyHash: ByteArray): RuntimeArgs {
+  public static args(accountPublicKeyHash: Uint8Array): RuntimeArgs {
     const accountKey = KeyValue.fromAccount(
       new AccountHash(accountPublicKeyHash)
     );
@@ -123,7 +120,7 @@ export class Transfer {
    * @param amount the amount of tokens to transfer
    */
   public static args(
-    accountPublicKeyHash: ByteArray,
+    accountPublicKeyHash: Uint8Array,
     amount: bigint
   ): RuntimeArgs {
     const account = CLValue.key(

@@ -98,21 +98,22 @@ interface UserInputPersistent {
 }
 
 export class DeployContractsContainer {
-  @observable deployConfiguration: FormDeployConfiguration = new FormState<
-    DeployConfiguration
-  >({
-    contractType: new FieldState<DeployUtil.ContractType | null>(
-      null
-    ).validators(valueRequired),
-    contractHash: new FieldState('').disableAutoValidation(),
-    paymentAmount: new FieldState<number>(10000000).validators(
-      numberGreaterThan(0),
-      validateInt
-    ),
-    fromAddress: new FieldState<string>(''),
-    contractName: new FieldState<string>(''),
-    entryPoint: new FieldState<string>('call')
-  })
+  @observable
+  deployConfiguration: FormDeployConfiguration = new FormState<DeployConfiguration>(
+    {
+      contractType: new FieldState<DeployUtil.ContractType | null>(
+        null
+      ).validators(valueRequired),
+      contractHash: new FieldState('').disableAutoValidation(),
+      paymentAmount: new FieldState<number>(10000000).validators(
+        numberGreaterThan(0),
+        validateInt
+      ),
+      fromAddress: new FieldState<string>(''),
+      contractName: new FieldState<string>(''),
+      entryPoint: new FieldState<string>('call')
+    }
+  )
     .compose()
     .validators(deployConfiguration => {
       if (deployConfiguration.contractType.$ === DeployUtil.ContractType.Hash) {
@@ -362,35 +363,34 @@ export class DeployContractsContainer {
       const args = deployArguments.value;
       let session: ByteArray | string;
 
-      let runtimeArgs = new RuntimeArgs(
+      let runtimeArgs = RuntimeArgs.fromNamedArgs(
         args.map((arg: FormState<DeployArgument>) => {
           return DeployArgumentParser.buildArgument(arg);
         })
       );
-      const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
       let sessionExecutionItem: DeployUtil.ExecutableDeployItem | null = null;
 
       if (config.contractType.value === DeployUtil.ContractType.WASM) {
         session = this.selectedFileContent!;
-        sessionExecutionItem = new DeployUtil.ModuleBytes(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newModuleBytes(
           session,
-          runtimeArgs.toBytes()
+          runtimeArgs
         );
       } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
         session = decodeBase16(config.contractHash.value);
         const entryPoint = config.entryPoint.value;
-        sessionExecutionItem = new DeployUtil.StoredContractByHash(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newStoredContractByHash(
           session,
           entryPoint,
-          runtimeArgs.toBytes()
+          runtimeArgs
         );
       } else if (config.contractType.value === DeployUtil.ContractType.Name) {
         session = config.contractName.value;
         const entryPoint = config.entryPoint.value;
-        sessionExecutionItem = new DeployUtil.StoredContractByName(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newStoredContractByName(
           session,
           entryPoint,
-          runtimeArgs.toBytes()
+          runtimeArgs
         );
       }
 
@@ -401,7 +401,7 @@ export class DeployContractsContainer {
             window.config.network?.chainName || ''
           ),
           sessionExecutionItem,
-          DeployUtil.standardPayment(paymentAmount)
+          DeployUtil.standardPayment(config.paymentAmount.value)
         );
       }
       return Promise.resolve(null);

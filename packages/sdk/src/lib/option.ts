@@ -3,6 +3,7 @@ import {
   CLType,
   CLTypedAndToBytes,
   CLTypeHelper,
+  CLValue,
   fromBytesByCLType,
   FromBytesError,
   OptionType,
@@ -57,6 +58,18 @@ export class Option extends CLTypedAndToBytes {
   }
 
   /**
+   * Extract value.
+   *
+   * @returns CLValue if the `Option` has some value.
+   */
+  public getSome(): CLValue {
+    if (!this.isSome()) {
+      throw new Error('Value is None');
+    }
+    return CLValue.fromT(this.t!);
+  }
+
+  /**
    * Serializes the `Option` into an array of bytes.
    */
   public toBytes() {
@@ -70,12 +83,12 @@ export class Option extends CLTypedAndToBytes {
     return CLTypeHelper.option(this.innerType!);
   }
 
-  public static fromBytes(type: OptionType, bytes: ByteArray): Result<Option> {
+  public static fromBytes(type: OptionType, bytes: Uint8Array): Result<Option> {
     const u8Res = U8.fromBytes(bytes);
     if (u8Res.hasError()) {
       return Result.Err(u8Res.error);
     }
-    const optionTag = u8Res.value.value as number;
+    const optionTag = u8Res.value.val.toNumber();
     if (optionTag === OPTION_TAG_NONE) {
       return Result.Ok(new Option(null, type.innerType), u8Res.remainder);
     } else if (optionTag === OPTION_TAG_SOME) {

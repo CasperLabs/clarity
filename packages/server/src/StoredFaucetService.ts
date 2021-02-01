@@ -1,7 +1,7 @@
 import {
-  encodeBase16,
   CasperServiceByJsonRPC,
-  DeployUtil
+  DeployUtil,
+  encodeBase16
 } from 'casper-client-sdk';
 import { ByteArray } from 'tweetnacl-ts';
 import { CallFaucet } from './lib/Contracts';
@@ -20,20 +20,20 @@ export class StoredFaucetService {
     private chainName: string
   ) {}
 
-  async callStoredFaucet(accountPublicKeyHash: ByteArray): Promise<DeployHash> {
+  async callStoredFaucet(accountPublicKeyHash: ByteArray): Promise<Uint8Array> {
     const state = await this.checkState();
     if (state) {
       const sessionArgs = CallFaucet.args(
         accountPublicKeyHash,
         this.transferAmount
-      ).toBytes();
-      const session = new DeployUtil.StoredContractByName(
+      );
+      const session = DeployUtil.ExecutableDeployItem.newStoredContractByName(
         CONTRACT_NAME,
         ENTRY_POINT_NAME,
         sessionArgs
       );
 
-      const payment = DeployUtil.standardPayment(this.paymentAmount);
+      const payment = DeployUtil.standardPayment(this.paymentAmount.toString());
       const deployByName = DeployUtil.makeDeploy(
         new DeployUtil.DeployParams(
           this.contractKeys.publicKey,
