@@ -133,7 +133,7 @@ export class Result<T> {
     return new Result<T>(val, rem, FromBytesError.Ok);
   }
 
-  get remainder(): Uint8Array {
+  public remainder(): Uint8Array {
     if (this.rem === null) {
       throw new Error("Don't have remainder");
     }
@@ -143,7 +143,7 @@ export class Result<T> {
   /**
    * Assumes that reference wrapper contains a value and then returns it
    */
-  get value(): T {
+  public value(): T {
     if (!this.hasValue()) {
       throw new Error("Don't have value");
     }
@@ -399,11 +399,11 @@ export class StringValue extends CLTypedAndToBytes {
     if (res.hasError()) {
       return Result.Err(res.error);
     }
-    const len = res.value.val.toNumber();
-    const str = Buffer.from(res.remainder.subarray(0, len)).toString('utf8');
+    const len = res.value().val.toNumber();
+    const str = Buffer.from(res.remainder().subarray(0, len)).toString('utf8');
     return Result.Ok<StringValue>(
       new StringValue(str),
-      res.remainder.subarray(len)
+      res.remainder().subarray(len)
     );
   }
 }
@@ -486,7 +486,7 @@ const fromBytesSimpleType = (
   if (innerRes.hasError()) {
     return Result.Err(innerRes.error);
   } else {
-    return Result.Ok(innerRes.value, innerRes.remainder);
+    return Result.Ok(innerRes.value(), innerRes.remainder());
   }
 };
 
@@ -514,16 +514,16 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.val.toNumber();
+    const size = u32Res.value().val.toNumber();
     const vec = [];
-    let remainder = u32Res.remainder;
+    let remainder = u32Res.remainder();
     for (let i = 0; i < size; i++) {
       const v = fromBytesByCLType(type.innerType, remainder);
       if (v.hasError()) {
         return Result.Err(v.error);
       }
-      vec.push(v.value);
-      remainder = v.remainder;
+      vec.push(v.value());
+      remainder = v.remainder();
     }
     return Result.Ok(new List(vec), remainder);
   }
@@ -547,8 +547,8 @@ export class Tuple1 extends CLTypedAndToBytes {
     if (innerRes.hasError()) {
       return Result.Err(innerRes.error);
     }
-    const tuple = new Tuple1(innerRes.value);
-    return Result.Ok(tuple, innerRes.remainder);
+    const tuple = new Tuple1(innerRes.value());
+    return Result.Ok(tuple, innerRes.remainder());
   }
 }
 
@@ -570,12 +570,12 @@ export class Tuple2 extends CLTypedAndToBytes {
     if (t0Res.hasError()) {
       return Result.Err(t0Res.error);
     }
-    const t1Res = fromBytesByCLType(type.t1, t0Res.remainder);
+    const t1Res = fromBytesByCLType(type.t1, t0Res.remainder());
     if (t1Res.hasError()) {
       return Result.Err(t1Res.error);
     }
-    const tuple = new Tuple2(t0Res.value, t1Res.value);
-    return Result.Ok(tuple, t1Res.remainder);
+    const tuple = new Tuple2(t0Res.value(), t1Res.value());
+    return Result.Ok(tuple, t1Res.remainder());
   }
 }
 
@@ -605,16 +605,16 @@ export class Tuple3 extends CLTypedAndToBytes {
     if (t0Res.hasError()) {
       return Result.Err(t0Res.error);
     }
-    const t1Res = fromBytesByCLType(type.t1, t0Res.remainder);
+    const t1Res = fromBytesByCLType(type.t1, t0Res.remainder());
     if (t1Res.hasError()) {
       return Result.Err(t1Res.error);
     }
-    const t2Res = fromBytesByCLType(type.t2, t1Res.remainder);
+    const t2Res = fromBytesByCLType(type.t2, t1Res.remainder());
     if (t2Res.hasError()) {
       return Result.Err(t2Res.error);
     }
-    const tuple = new Tuple3(t0Res.value, t1Res.value, t2Res.value);
-    return Result.Ok(tuple, t2Res.remainder);
+    const tuple = new Tuple3(t0Res.value(), t1Res.value(), t2Res.value());
+    return Result.Ok(tuple, t2Res.remainder());
   }
 }
 
@@ -776,21 +776,21 @@ export class MapValue extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.val.toNumber();
+    const size = u32Res.value().val.toNumber();
     const vec: MapEntry[] = [];
-    let remainder = u32Res.remainder;
+    let remainder = u32Res.remainder();
     for (let i = 0; i < size; i++) {
       const keyRes = fromBytesByCLType(type.keyType, remainder);
       if (keyRes.hasError()) {
         return Result.Err(keyRes.error);
       }
-      remainder = keyRes.remainder;
+      remainder = keyRes.remainder();
       const valueRes = fromBytesByCLType(type.valueType, remainder);
       if (valueRes.hasError()) {
         return Result.Err(valueRes.error);
       }
-      remainder = valueRes.remainder;
-      vec.push({ key: keyRes.value, value: valueRes.value });
+      remainder = valueRes.remainder();
+      vec.push({ key: keyRes.value(), value: valueRes.value() });
     }
     return Result.Ok(new MapValue(vec), remainder);
   }
@@ -1085,8 +1085,8 @@ export class CLTypeHelper {
         }
 
         return Result.Ok(
-          CLTypeHelper.option(innerTypeRes.value),
-          innerTypeRes.remainder
+          CLTypeHelper.option(innerTypeRes.value()),
+          innerTypeRes.remainder()
         );
       }
       case ComplexType.List: {
@@ -1097,8 +1097,8 @@ export class CLTypeHelper {
         }
 
         return Result.Ok(
-          CLTypeHelper.list(innerTypeRes.value),
-          innerTypeRes.remainder
+          CLTypeHelper.list(innerTypeRes.value()),
+          innerTypeRes.remainder()
         );
       }
       case ComplexType.ByteArray: {
@@ -1108,8 +1108,8 @@ export class CLTypeHelper {
           return Result.Err(sizeRes.error);
         }
         return Result.Ok(
-          CLTypeHelper.byteArray(sizeRes.value.val.toNumber()),
-          sizeRes.remainder
+          CLTypeHelper.byteArray(sizeRes.value().val.toNumber()),
+          sizeRes.remainder()
         );
       }
       case ComplexType.Result:
@@ -1121,13 +1121,13 @@ export class CLTypeHelper {
         if (keyTypeRes.hasError()) {
           return Result.Err(keyTypeRes.error);
         }
-        const valueTypeRes = CLTypeHelper.fromBytes(keyTypeRes.remainder);
+        const valueTypeRes = CLTypeHelper.fromBytes(keyTypeRes.remainder());
         if (valueTypeRes.hasError()) {
           return Result.Err(valueTypeRes.error);
         }
         return Result.Ok(
-          CLTypeHelper.map(keyTypeRes.value, valueTypeRes.value),
-          valueTypeRes.remainder
+          CLTypeHelper.map(keyTypeRes.value(), valueTypeRes.value()),
+          valueTypeRes.remainder()
         );
       }
 
@@ -1139,8 +1139,8 @@ export class CLTypeHelper {
         }
 
         return Result.Ok(
-          CLTypeHelper.tuple1(innerTypeRes.value),
-          innerTypeRes.remainder
+          CLTypeHelper.tuple1(innerTypeRes.value()),
+          innerTypeRes.remainder()
         );
       }
       case ComplexType.Tuple2: {
@@ -1150,14 +1150,14 @@ export class CLTypeHelper {
           return Result.Err(innerType1Res.error);
         }
 
-        const innerType2Res = CLTypeHelper.fromBytes(innerType1Res.remainder);
+        const innerType2Res = CLTypeHelper.fromBytes(innerType1Res.remainder());
         if (innerType2Res.hasError()) {
           return Result.Err(innerType2Res.error);
         }
 
         return Result.Ok(
-          CLTypeHelper.tuple2(innerType1Res.value, innerType2Res.value),
-          innerType2Res.remainder
+          CLTypeHelper.tuple2(innerType1Res.value(), innerType2Res.value()),
+          innerType2Res.remainder()
         );
       }
       case ComplexType.Tuple3: {
@@ -1167,23 +1167,23 @@ export class CLTypeHelper {
           return Result.Err(innerType1Res.error);
         }
 
-        const innerType2Res = CLTypeHelper.fromBytes(innerType1Res.remainder);
+        const innerType2Res = CLTypeHelper.fromBytes(innerType1Res.remainder());
         if (innerType2Res.hasError()) {
           return Result.Err(innerType2Res.error);
         }
 
-        const innerType3Res = CLTypeHelper.fromBytes(innerType1Res.remainder);
+        const innerType3Res = CLTypeHelper.fromBytes(innerType1Res.remainder());
         if (innerType3Res.hasError()) {
           return Result.Err(innerType3Res.error);
         }
 
         return Result.Ok(
           CLTypeHelper.tuple3(
-            innerType1Res.value,
-            innerType2Res.value,
-            innerType3Res.value
+            innerType1Res.value(),
+            innerType2Res.value(),
+            innerType3Res.value()
           ),
-          innerType3Res.remainder
+          innerType3Res.remainder()
         );
       }
       case ComplexType.Any:
@@ -1463,7 +1463,7 @@ const jsonToCLType = (json: any): CLType => {
 
 function deserializeCLValue(_a: any, _b: any) {
   const v = fromBytesByCLType(_a.clType, decodeBase16(_a.bytes));
-  const ret = CLValue.fromT(v.value);
+  const ret = CLValue.fromT(v.value());
   return ret;
 }
 
@@ -1506,7 +1506,7 @@ export class CLValue implements ToBytes {
     this.bytes = encodeBase16(this.value.toBytes());
   }
 
-  public get clValueBytes() {
+  public clValueBytes() {
     return this.value.toBytes();
   }
 
@@ -1519,7 +1519,7 @@ export class CLValue implements ToBytes {
    */
   public toBytes() {
     return concat([
-      toBytesArrayU8(this.clValueBytes),
+      toBytesArrayU8(this.clValueBytes()),
       CLTypeHelper.toBytesHelper(this.clType)
     ]);
   }
@@ -1529,13 +1529,13 @@ export class CLValue implements ToBytes {
     if (bytesRes.hasError()) {
       return Result.Err(bytesRes.error);
     }
-    const clTypeRes = CLTypeHelper.fromBytes(bytesRes.remainder);
+    const clTypeRes = CLTypeHelper.fromBytes(bytesRes.remainder());
     if (clTypeRes.hasError()) {
       return Result.Err(clTypeRes.error);
     }
-    const v = fromBytesByCLType(clTypeRes.value, bytesRes.value.rawBytes);
-    const clValue = new CLValue(v.value, clTypeRes.value);
-    return Result.Ok(clValue, clTypeRes.remainder);
+    const v = fromBytesByCLType(clTypeRes.value(), bytesRes.value().rawBytes);
+    const clValue = new CLValue(v.value(), clTypeRes.value());
+    return Result.Ok(clValue, clTypeRes.remainder());
   }
 
   protected reconstruct() {
@@ -1543,7 +1543,7 @@ export class CLValue implements ToBytes {
     if (v.hasError()) {
       throw new Error('Failed to deserialize CLValue');
     }
-    this.value = v.value;
+    this.value = v.value();
   }
 
   public static bool = (b: boolean) => {
@@ -1872,16 +1872,16 @@ export class KeyValue extends CLTypedAndToBytes {
       if (urefResult.hasError()) {
         return Result.Err<KeyValue>(urefResult.error);
       }
-      const key = KeyValue.fromURef(urefResult.value);
-      return Result.Ok(key, urefResult.remainder);
+      const key = KeyValue.fromURef(urefResult.value());
+      return Result.Ok(key, urefResult.remainder());
     } else if (tag === KeyVariant.ACCOUNT_ID) {
       const accountHashBytes = bytes.subarray(1);
       const accountHashResult = AccountHash.fromBytes(accountHashBytes);
       if (accountHashResult.hasError()) {
         return Result.Err(accountHashResult.error);
       }
-      const key = KeyValue.fromAccount(accountHashResult.value);
-      return Result.Ok(key, accountHashResult.remainder);
+      const key = KeyValue.fromAccount(accountHashResult.value());
+      return Result.Ok(key, accountHashResult.remainder());
     } else {
       return Result.Err(FromBytesError.FormattingError);
     }
