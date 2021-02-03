@@ -120,10 +120,17 @@ depends_on:
 ---
 kind: pipeline
 type: docker
-name: npm-publish-tag
+name: sdk-publish-tag
 
 steps:
-- name: npm-publish
+- name: sdk-pre-publish
+  image: "casperlabs/clarity-build:latest"
+  commands:
+  - "yarn install"
+  - "cd packages/sdk"
+  - "npm run-script prepublishOnly"
+
+- name: sdk-publish
   image: plugins/npm
   failure: "ignore"
   settings:
