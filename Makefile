@@ -36,8 +36,9 @@ test:
 
 # install all package
 .make/bootstrap:
+	npm install tslint
+	npm install lerna
 	yarn bootstrap
-
 
 .make/npm/build-explorer: .make/bootstrap
 	# CI=false so on Drone it won't fail on warnings (currently about href).
