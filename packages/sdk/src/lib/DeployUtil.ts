@@ -26,7 +26,7 @@ import {
 } from './byterepr';
 import { RuntimeArgs } from './RuntimeArgs';
 // import JSBI from 'jsbi';
-import { Keys, URef } from './index';
+import { DeployUtil, Keys, URef } from './index';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { jsonArrayMember, jsonMember, jsonObject, TypedJSON } from 'typedjson';
@@ -193,8 +193,12 @@ abstract class ExecutableDeployItemInternal implements ToBytes {
 
   public abstract toBytes(): Uint8Array;
 
-  public getArgByName(argName: string): CLValue | undefined {
-    return this.args.args.get(argName);
+  public getArgByName(name: string): CLValue | undefined {
+    return this.args.args.get(name);
+  }
+
+  public setArg(name: string, value: CLValue) {
+    this.args.args.set(name, value);
   }
 }
 
@@ -532,6 +536,23 @@ export class ExecutableDeployItem implements ToBytes {
     throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
+  public setArg(name: string, value: CLValue) {
+    if (this.isModuleBytes()) {
+      return this.moduleBytes!.setArg(name, value);
+    } else if (this.isStoredContractByHash()) {
+      return this.storedContractByHash!.setArg(name, value);
+    } else if (this.isStoredContractByName()) {
+      return this.storedContractByName!.setArg(name, value);
+    } else if (this.isStoredVersionContractByHash()) {
+      return this.storedVersionedContractByHash!.setArg(name, value);
+    } else if (this.isStoredVersionContractByName()) {
+      return this.storedVersionedContractByName!.setArg(name, value);
+    } else if (this.isTransfer()) {
+      return this.transfer!.setArg(name, value);
+    }
+    throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
+  }
+
   public static fromExecutableDeployItemInternal(
     item: ExecutableDeployItemInternal
   ) {
@@ -805,7 +826,7 @@ export class DeployParams {
   constructor(
     public accountPublicKey: PublicKey,
     public chainName: string,
-    public gasPrice: number = 10,
+    public gasPrice: number = 1,
     public ttl: number = 3600000,
     public dependencies: Uint8Array[] = [],
     public timestamp?: number
@@ -930,4 +951,28 @@ export const deployToJson = (deploy: Deploy) => {
 export const deployFromJson = (json: any) => {
   const serializer = new TypedJSON(Deploy);
   return serializer.parse(json.deploy);
+};
+
+export const addArgToDeploy = (
+  deploy: Deploy,
+  name: string,
+  value: CLValue
+): Deploy => {
+  if (deploy.approvals.length !== 0) {
+    throw Error('Can not add argument to already signed deploy.');
+  }
+
+  const deployParams = new DeployUtil.DeployParams(
+    deploy.header.account,
+    deploy.header.chainName,
+    deploy.header.gasPrice,
+    deploy.header.ttl,
+    deploy.header.dependencies,
+    deploy.header.timestamp
+  );
+
+  const session = deploy.session;
+  session.setArg(name, value);
+
+  return makeDeploy(deployParams, session, deploy.payment);
 };
