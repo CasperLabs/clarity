@@ -5,9 +5,15 @@ All notable changes to casper-client-sdk.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.17]
+### Added
+- Added `DeployUtils.addArgToDeploy(deploy: Deploy, name: string, value: CLValue)` to be able to modify Deploy's session arguments. It creates a new deploy instance. Can not be used on signed deploys.
+### Changed
+- Default `gasPrice` changed from `10` to `1`.
+
 ## [1.0.15]
 ### Added
-- Start using CHANGELOG.md.
+- Started using CHANGELOG.md.
 
 ### Changed
-- Change CLValue's `value` to `value()` and `remainder` to `remainder()`.
+- Changed CLValue's `value` to `value()` and `remainder` to `remainder()`.
