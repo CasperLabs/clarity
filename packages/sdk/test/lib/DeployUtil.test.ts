@@ -45,10 +45,9 @@ describe('DeployUtil', () => {
 
     // Serialize deploy to JSON.
     let json = DeployUtil.deployToJson(deploy);
-    
+
     // Deserialize deploy from JSON.
     deploy = DeployUtil.deployFromJson(json)!;
-    
 
     assert.isTrue(deploy.isTransfer());
     assert.isTrue(deploy.isStandardPayment());
@@ -101,7 +100,11 @@ describe('DeployUtil', () => {
     let oldDeploy = DeployUtil.makeDeploy(deployParams, session, payment);
 
     // Add new argument.
-    let deploy = DeployUtil.addArgToDeploy(oldDeploy, "custom_id", CLValue.u32(customId));
+    let deploy = DeployUtil.addArgToDeploy(
+      oldDeploy,
+      'custom_id',
+      CLValue.u32(customId)
+    );
 
     // Serialize and deserialize deploy.
     let json = DeployUtil.deployToJson(deploy);
@@ -162,13 +165,10 @@ describe('DeployUtil', () => {
     let payment = DeployUtil.standardPayment(paymentAmount);
     let deploy = DeployUtil.makeDeploy(deployParams, session, payment);
     deploy = DeployUtil.signDeploy(deploy, senderKey);
-    
+
     expect(() => {
       // Add new argument.
-      DeployUtil.addArgToDeploy(deploy, "custom_id", CLValue.u32(customId));
-    }).to.throw("Can not add argument to already signed deploy.");
-
+      DeployUtil.addArgToDeploy(deploy, 'custom_id', CLValue.u32(customId));
+    }).to.throw('Can not add argument to already signed deploy.');
   });
-
-  
 });

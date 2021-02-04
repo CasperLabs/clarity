@@ -536,7 +536,6 @@ export class ExecutableDeployItem implements ToBytes {
     throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
-
   public setArg(name: string, value: CLValue) {
     if (this.isModuleBytes()) {
       return this.moduleBytes!.setArg(name, value);
@@ -954,12 +953,16 @@ export const deployFromJson = (json: any) => {
   return serializer.parse(json.deploy);
 };
 
-export const addArgToDeploy = (deploy: Deploy, name: string, value: CLValue): Deploy => {
-  if(deploy.approvals.length != 0) {
-    throw Error("Can not add argument to already signed deploy.");
+export const addArgToDeploy = (
+  deploy: Deploy,
+  name: string,
+  value: CLValue
+): Deploy => {
+  if (deploy.approvals.length !== 0) {
+    throw Error('Can not add argument to already signed deploy.');
   }
-  
-  let deployParams = new DeployUtil.DeployParams(
+
+  const deployParams = new DeployUtil.DeployParams(
     deploy.header.account,
     deploy.header.chainName,
     deploy.header.gasPrice,
@@ -967,9 +970,9 @@ export const addArgToDeploy = (deploy: Deploy, name: string, value: CLValue): De
     deploy.header.dependencies,
     deploy.header.timestamp
   );
-  
-  let session = deploy.session;
+
+  const session = deploy.session;
   session.setArg(name, value);
 
   return makeDeploy(deployParams, session, deploy.payment);
-}
+};
