@@ -476,7 +476,7 @@ export class ExecutableDeployItem implements ToBytes {
   public moduleBytes?: ModuleBytes;
 
   @jsonMember({
-    name: 'StoredVersionedContractByHash',
+    name: 'StoredContractByHash',
     constructor: StoredContractByHash
   })
   public storedContractByHash?: StoredContractByHash;
