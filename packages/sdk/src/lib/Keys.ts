@@ -186,7 +186,7 @@ export class Ed25519 extends AsymmetricKey {
     // nacl expects that the private key will contain both.
     return new Ed25519({
       publicKey: publ,
-      secretKey: Buffer.concat([priv, publ])
+      secretKey: Buffer.concat([Buffer.from(priv), Buffer.from(publ)])
     });
   }
 
