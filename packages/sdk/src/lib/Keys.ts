@@ -184,9 +184,12 @@ export class Ed25519 extends AsymmetricKey {
     const publ = Ed25519.parsePublicKey(publicKey);
     const priv = Ed25519.parsePrivateKey(privateKey);
     // nacl expects that the private key will contain both.
+    const secr = new Uint8Array(publ.length + priv.length);
+    secr.set(priv);
+    secr.set(publ, priv.length);
     return new Ed25519({
       publicKey: publ,
-      secretKey: Buffer.concat([Buffer.from(priv), Buffer.from(publ)])
+      secretKey: secr
     });
   }
 
